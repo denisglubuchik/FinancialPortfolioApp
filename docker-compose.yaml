@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  portfolio_db:
+    container_name: portfolio_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "portfolio_app"
+      POSTGRES_USER: "sqluser"
+      POSTGRES_PASSWORD: "sqlpass"
+    ports:
+      - "5432:5432"
