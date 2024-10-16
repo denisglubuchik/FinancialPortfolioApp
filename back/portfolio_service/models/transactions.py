@@ -9,7 +9,7 @@ class Transactions(Base):
     __tablename__ = "transactions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.id"))
+    portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.id", ondelete="CASCADE"))
     asset_id: Mapped[int] = mapped_column(ForeignKey("assets.id"))
     transaction_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType))
     quantity: Mapped[float]

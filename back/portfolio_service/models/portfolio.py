@@ -9,13 +9,17 @@ class Portfolio(Base):
     __tablename__ = "portfolios"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     total_invested: Mapped[float] = mapped_column(default=0)
     current_value: Mapped[float] = mapped_column(default=0)
 
     user: Mapped["Users"] = relationship(back_populates="portfolio")
-    portfolio_assets: Mapped[list["PortfolioAssets"]] = relationship(back_populates="portfolio")
-    transactions: Mapped[list["Transactions"]] = relationship(back_populates="portfolio")
+    portfolio_assets: Mapped[list["PortfolioAssets"]] = relationship(back_populates="portfolio",
+                                                                     cascade="all, delete-orphan",
+                                                                     passive_deletes=True)
+    transactions: Mapped[list["Transactions"]] = relationship(back_populates="portfolio",
+                                                              cascade="all, delete-orphan",
+                                                              passive_deletes=True)
 
     def read_model(self) -> SPortfolio:
         return SPortfolio(

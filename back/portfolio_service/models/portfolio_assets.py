@@ -9,7 +9,7 @@ class PortfolioAssets(Base):
     __tablename__ = "portfolio_assets"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.id"))
+    portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.id", ondelete="CASCADE"))
     asset_id: Mapped[int] = mapped_column(ForeignKey("assets.id"))
     quantity: Mapped[float]
 

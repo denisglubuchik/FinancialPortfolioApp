@@ -11,7 +11,9 @@ class Users(Base):
     external_user_id: Mapped[int]
     username: Mapped[str]
 
-    portfolio: Mapped["Portfolio"] = relationship(back_populates="user")
+    portfolio: Mapped["Portfolio"] = relationship(back_populates="user",
+                                                  cascade="all, delete-orphan",
+                                                  passive_deletes=True)
 
     def read_model(self) -> SUser:
         return SUser(
