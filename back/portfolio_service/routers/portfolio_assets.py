@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from back.portfolio_service.dependencies import UOWDep
+from back.portfolio_service.exceptions import PortfolioAssetDoesntExistException
 from back.portfolio_service.schemas.portfolio_assets import SPortfolioAsset
 from back.portfolio_service.services.portfolio_assets import PortfolioAssetsService
 
@@ -19,6 +20,8 @@ async def get_portfolio_assets(portfolio_id: int, uow: UOWDep) -> list[SPortfoli
 @router.get("/{portfolio_id}/{asset_id}")
 async def get_portfolio_asset(portfolio_id: int, asset_id: int, uow: UOWDep) -> SPortfolioAsset:
     portfolio_asset = await PortfolioAssetsService().get_portfolio_asset(uow, portfolio_id, asset_id)
+    if not portfolio_asset:
+        raise PortfolioAssetDoesntExistException()
     return portfolio_asset
 
 
