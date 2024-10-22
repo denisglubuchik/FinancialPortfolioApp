@@ -5,6 +5,7 @@ __pycache__/
 
 back/*/alembic.ini
 .idea
+.env-docker
 
 # C extensions
 *.so
