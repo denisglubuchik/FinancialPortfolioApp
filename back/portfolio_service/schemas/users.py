@@ -8,3 +8,9 @@ class SUser(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SUserCreate(BaseModel):
+    external_user_id: int
+    username: str
+

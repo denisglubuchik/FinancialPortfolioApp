@@ -6,7 +6,7 @@ class UserSettings(BaseSettings):
 
 
 class PortfolioSettings(BaseSettings):
-    DB_PORTFOLIOS_HOST: str = "localhost"
+    DB_PORTFOLIOS_HOST: str = "192.168.0.100"
     DB_PORTFOLIOS_PORT: int = 5432
     DB_PORTFOLIOS_NAME: str = "portfolio_app"
     DB_PORTFOLIOS_USER: str = "sqluser"
