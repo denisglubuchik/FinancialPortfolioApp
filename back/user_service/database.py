@@ -8,7 +8,7 @@ user_settings =UserSettings()
 
 DB_URL = (f"postgresql+asyncpg://{user_settings.DB_USERS_USER}:"
           f"{user_settings.DB_USERS_PASSWORD}@"
-          f"{user_settings.DB_USERS_HOST}:{user_settings.DB_USERS_HOST}/"
+          f"{user_settings.DB_USERS_HOST}:{user_settings.DB_USERS_PORT}/"
           f"{user_settings.DB_USERS_NAME}")
 
 

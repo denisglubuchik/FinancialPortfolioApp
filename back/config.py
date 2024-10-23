@@ -2,11 +2,14 @@ from pydantic_settings import BaseSettings
 
 
 class UserSettings(BaseSettings):
-    DB_USERS_HOST: str = "localhost"
+    DB_USERS_HOST: str = "192.168.0.101"
     DB_USERS_PORT: int = 5433
-    DB_USERS_NAME: str = "users_app"
+    DB_USERS_NAME: str = "user_app"
     DB_USERS_USER: str = "sqluser"
     DB_USERS_PASSWORD: str = "sqlpass"
+
+    SECRET_KEY: str = "secret"
+    ALGORITHM: str = "HS256"
 
 
 class PortfolioSettings(BaseSettings):

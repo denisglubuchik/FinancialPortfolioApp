@@ -30,6 +30,35 @@ services:
       default1:
         ipv4_address: 192.168.0.10
 
+  user_db:
+    container_name: user_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "user_app"
+      POSTGRES_USER: "sqluser"
+      POSTGRES_PASSWORD: "sqlpass"
+    ports:
+      - "5433:5432"
+    networks:
+      default1:
+        ipv4_address: 192.168.0.101
+
+  user_app:
+    container_name: user_app
+    build:
+      context: .
+      dockerfile: docker/user_service/Dockerfile
+    env_file:
+      - .env-docker
+    command: [ "back/user_service/app.sh" ]
+    #    command: sh -c "cd /back/portfolio_service && alembic upgrade head && cd ../../ && gunicorn back.portfolio_service.portfolio_main:portfolio_app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+    ports:
+      - "8001:8001"
+    depends_on:
+      - user_db
+    networks:
+      default1:
+        ipv4_address: 192.168.0.11
 
 networks:
   default1:

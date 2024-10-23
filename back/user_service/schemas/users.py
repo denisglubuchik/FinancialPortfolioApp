@@ -1,23 +1,26 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
-class SCreateUser(BaseModel):
+class SUserCreate(BaseModel):
     username: str
-    password: str
+    hashed_password: str
     email: str
 
 
 class SUser(BaseModel):
     id: int
     username: str
+    hashed_password: str
     email: str
-    registered_at: str
+    registered_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class SUpdateUser(BaseModel):
+class SUserUpdate(BaseModel):
     username: str
     email: str
-    password: str
+    hashed_password: str

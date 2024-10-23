@@ -7,12 +7,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from back.portfolio_service.database import Base, DB_URL
-from back.portfolio_service.models.portfolio import Portfolio
-from back.portfolio_service.models.transactions import Transactions
-from back.portfolio_service.models.users import Users
-from back.portfolio_service.models.assets import Assets
-from back.portfolio_service.models.portfolio_assets import PortfolioAssets
+from back.user_service.database import Base, DB_URL
+from back.user_service.models import Users, RefreshTokens, VerificationTokens
 
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
@@ -31,7 +27,6 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
-
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
