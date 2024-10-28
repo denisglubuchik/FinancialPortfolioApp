@@ -1,16 +1,13 @@
-from fastapi import Depends, HTTPException, Form
+from fastapi import Depends,  Form
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
-from starlette import status
 
 from back.user_service.dao import UsersDAO
-from back.user_service.auth.helpers import (
-    TOKEN_TYPE_FIELD,
-    ACCESS_TOKEN_TYPE,
-    REFRESH_TOKEN_TYPE,
-)
+from back.user_service.auth.helpers import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE, JWTPayload
 from back.user_service.auth import utils as auth_utils
 from back.user_service.schemas.users import SUser
+from back.user_service.exceptions import InvalidTokenException, InvalidTokenTypeException, UserNotFoundException, \
+    InvalidPasswordException, InvalidUsernameException
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/users/login",
@@ -19,42 +16,31 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 async def get_current_token_payload(
     token: str = Depends(oauth2_scheme),
-) -> dict:
+) -> JWTPayload:
     try:
         payload = auth_utils.decode_jwt(
             token=token,
         )
     except InvalidTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"invalid token error: {e}",
-        )
-    return payload
+        raise InvalidTokenException(e)
+    return JWTPayload(**payload)
 
 
 async def validate_token_type(
-    payload: dict,
+    payload: JWTPayload,
     token_type: str,
 ) -> bool:
-    current_token_type = payload.get(TOKEN_TYPE_FIELD)
+    current_token_type = payload.token_type
     if current_token_type == token_type:
         return True
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail=f"invalid token type {current_token_type!r} expected {token_type!r}",
-    )
+    raise InvalidTokenTypeException(current_token_type, token_type)
 
 
-async def get_user_by_token_sub(payload: dict) -> SUser:
-    username: str | None = payload.get("sub")
-    # if user := users_db.get(username):
-    #     return user
+async def get_user_by_token_sub(payload: JWTPayload) -> SUser:
+    username: str | None = payload.sub
     if user := await UsersDAO.find_one_or_none(username=username):
         return SUser.model_validate(user)
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="token invalid (user not found)",
-    )
+    raise UserNotFoundException()
 
 
 class UserGetterFromToken:
@@ -63,7 +49,7 @@ class UserGetterFromToken:
 
     async def __call__(
         self,
-        payload: dict = Depends(get_current_token_payload),
+        payload: JWTPayload = Depends(get_current_token_payload),
     ):
         await validate_token_type(payload, self.token_type)
         return await get_user_by_token_sub(payload)
@@ -76,21 +62,16 @@ get_current_auth_user_for_refresh = UserGetterFromToken(REFRESH_TOKEN_TYPE)
 async def validate_auth_user(
     username: str = Form(),
     password: str = Form(),
-):
-    unauthed_exc = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="invalid username or password",
-    )
-    # if not (user := users_db.get(username)):
-    #     raise unauthed_exc
+) -> SUser:
     if not (user := await UsersDAO.find_one_or_none(username=username)):
-        raise unauthed_exc
+        raise InvalidUsernameException()
+
     user = SUser.model_validate(user)
 
     if not auth_utils.validate_password(
         password=password,
         hashed_password=user.hashed_password,
     ):
-        raise unauthed_exc
+        raise InvalidPasswordException()
 
     return user

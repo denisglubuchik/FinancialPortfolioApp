@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
-from starlette import status
 
 from back.user_service.message_broker import rabbitmq
 
@@ -16,6 +15,7 @@ from back.user_service.auth.validation import (
     get_current_auth_user,
 )
 from back.user_service.schemas.users import SUser
+from back.user_service.exceptions import UserAlreadyExistsException
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -46,10 +46,7 @@ async def user_register(
 ):
     user = await UsersDAO.find_one_or_none(username=new_user.username)
     if user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="user already exists",
-        )
+        raise UserAlreadyExistsException()
     new_user = new_user.model_dump()
     new_user["hashed_password"] = auth_utils.hash_password(new_user["hashed_password"])
     user: Users = await UsersDAO.insert(**new_user)
@@ -88,7 +85,10 @@ class UpdatedUserAndToken(BaseModel):
     token: TokenInfo
 
 
-@router.put("/users", response_model=SUser | UpdatedUserAndToken)
+@router.put("/users",
+            response_model=SUser | UpdatedUserAndToken,
+            response_model_exclude_none=True,
+)
 async def user_update(updated_user: SUserUpdate, current_user: SUser = Depends(get_current_auth_user)):
     updated_user = await UsersDAO.update(current_user.id, **updated_user.model_dump())
     if current_user.username != updated_user.username:
