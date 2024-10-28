@@ -1,10 +1,8 @@
-Financial Portfolio Managment App
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>README</title>
 </head>
 <body>
 
@@ -33,13 +31,10 @@ Financial Portfolio Managment App
 
 <ol>
     <li>Clone the repository:</li>
-    <pre><code>git clone https://github.com/your-username/your-repo.git</code></pre>
-
+    <pre><code>git clone https://github.com/your-username/your-repo.git</code></pre>`
     <li>Navigate to the project directory:</li>
     <pre><code>cd your-repo</code></pre>
-
     <li>Create .env-docker file using .env-docker-example</li>
-
     <li>Run docker compose</li>
     <pre><code>docker compose build && docker compose up</code></pre>
 </ol>
