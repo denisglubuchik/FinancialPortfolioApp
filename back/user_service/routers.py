@@ -7,7 +7,7 @@ from back.user_service.message_broker import rabbitmq
 
 from back.user_service.dao import UsersDAO
 from back.user_service.models import Users
-from back.user_service.schemas.users import SUserCreate
+from back.user_service.schemas.users import SUserCreate, SUserUpdate
 from back.user_service.auth import utils as auth_utils
 from back.user_service.auth.helpers import create_access_token, create_refresh_token
 from back.user_service.auth.validation import (
@@ -31,6 +31,13 @@ router = APIRouter(
     tags=["users"],
     dependencies=[Depends(http_bearer)],
 )
+
+
+@router.get("/users/me/", response_model=SUser)
+async def auth_user_check_self_info(
+    user: SUser = Depends(get_current_auth_user),
+):
+    return user
 
 
 @router.post("/register/", response_model=SUser)
@@ -76,11 +83,20 @@ async def auth_refresh_jwt(
     )
 
 
-@router.get("/users/me/", response_model=SUser)
-async def auth_user_check_self_info(
-    user: SUser = Depends(get_current_auth_user),
-):
-    return user
+class UpdatedUserAndToken(BaseModel):
+    updated_user: SUser
+    token: TokenInfo
+
+
+@router.put("/users", response_model=SUser | UpdatedUserAndToken)
+async def user_update(updated_user: SUserUpdate, current_user: SUser = Depends(get_current_auth_user)):
+    updated_user = await UsersDAO.update(current_user.id, **updated_user.model_dump())
+    if current_user.username != updated_user.username:
+        await rabbitmq.update_user(current_user.id, updated_user.username)
+        access_token = create_access_token(updated_user)
+        return UpdatedUserAndToken(updated_user=updated_user,
+                                   token=TokenInfo(access_token=access_token))
+    return updated_user
 
 
 @router.delete("/users")

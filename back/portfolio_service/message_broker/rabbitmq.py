@@ -16,6 +16,15 @@ async def handle_new_user(message):
         await session.commit()
 
 
+@rabbit_broker.subscriber("user_updated")
+async def handle_update_user(message):
+    user_id = message["user_id"]
+    username = message["username"]
+    async with async_session_maker() as session:
+        await UsersRepository(session).update(id=user_id, data={"username": username})
+        await session.commit()
+
+
 @rabbit_broker.subscriber("user_deleted")
 async def handle_delete_user(message):
     user_id = message["user_id"]

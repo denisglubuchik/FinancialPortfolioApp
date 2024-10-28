@@ -23,4 +23,3 @@ class SUser(BaseModel):
 class SUserUpdate(BaseModel):
     username: str
     email: str
-    hashed_password: str
