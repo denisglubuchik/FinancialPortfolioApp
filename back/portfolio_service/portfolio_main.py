@@ -17,3 +17,15 @@ portfolio_app.include_router(transactions_router)
 portfolio_app.include_router(portfolio_assets_router)
 
 # portfolio_settings = PortfolioSettings()
+
+
+@portfolio_app.on_event("startup")
+async def start_rabbit():
+    from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
+    await rabbit_broker.start()
+
+
+@portfolio_app.on_event("shutdown")
+async def stop_rabbit():
+    from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
+    await rabbit_broker.stop()

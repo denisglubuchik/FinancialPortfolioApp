@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 
 
+class RabbitMQSettings(BaseSettings):
+    RABBITMQ_MQ: str = "amqp://guest:guest@192.168.0.200:5672/"
+
+
 class UserSettings(BaseSettings):
     DB_USERS_HOST: str = "192.168.0.101"
     DB_USERS_PORT: int = 5433

@@ -3,7 +3,10 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from starlette import status
 
+from back.user_service.message_broker import rabbitmq
+
 from back.user_service.dao import UsersDAO
+from back.user_service.models import Users
 from back.user_service.schemas.users import SUserCreate
 from back.user_service.auth import utils as auth_utils
 from back.user_service.auth.helpers import create_access_token, create_refresh_token
@@ -42,7 +45,9 @@ async def user_register(
         )
     new_user = new_user.model_dump()
     new_user["hashed_password"] = auth_utils.hash_password(new_user["hashed_password"])
-    return await UsersDAO.insert(**new_user)
+    user: Users = await UsersDAO.insert(**new_user)
+    await rabbitmq.new_user(user.id, user.username)
+    return user
 
 
 @router.post("/login/", response_model=TokenInfo)
@@ -76,3 +81,10 @@ async def auth_user_check_self_info(
     user: SUser = Depends(get_current_auth_user),
 ):
     return user
+
+
+@router.delete("/users")
+async def user_delete(user: SUser = Depends(get_current_auth_user)):
+    await UsersDAO.delete(user.id)
+    await rabbitmq.delete_user(user.id)
+    return {"message": "user deleted"}

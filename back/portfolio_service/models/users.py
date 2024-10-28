@@ -7,8 +7,7 @@ from back.portfolio_service.schemas.users import SUser
 class Users(Base):
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    external_user_id: Mapped[int]
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     username: Mapped[str]
 
     portfolio: Mapped["Portfolio"] = relationship(back_populates="user",
@@ -18,6 +17,5 @@ class Users(Base):
     def read_model(self) -> SUser:
         return SUser(
             id=self.id,
-            external_user_id=self.external_user_id,
             username=self.username
         )

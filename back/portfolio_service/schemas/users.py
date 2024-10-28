@@ -3,7 +3,6 @@ from pydantic import BaseModel
 
 class SUser(BaseModel):
     id: int
-    external_user_id: int
     username: str
 
     class Config:
@@ -11,6 +10,6 @@ class SUser(BaseModel):
 
 
 class SUserCreate(BaseModel):
-    external_user_id: int
+    id: int
     username: str
 
