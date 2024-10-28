@@ -28,6 +28,7 @@ def create_access_token(user: SUser) -> str:
     jwt_payload = {
         # subject
         "sub": user.username,
+        "user_id": user.id,
         "username": user.username,
         "email": user.email,
         # "logged_in_at"
@@ -42,6 +43,7 @@ def create_access_token(user: SUser) -> str:
 def create_refresh_token(user: SUser) -> str:
     jwt_payload = {
         "sub": user.username,
+        "user_id": user.id,
         # "username": user.username,
     }
     return create_jwt(
