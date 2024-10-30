@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert, update, delete
 
-from back.user_service.database import async_session_maker
-from back.user_service.models import Users
+from back.notification_service.db.database import async_session_maker
+from back.notification_service.db.models import Users, Notifications
 
 
 class BaseDAO:
@@ -54,3 +54,7 @@ class BaseDAO:
 
 class UsersDAO(BaseDAO):
     model = Users
+
+
+class NotificationsDAO(BaseDAO):
+    model = Notifications

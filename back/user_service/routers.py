@@ -4,8 +4,8 @@ from pydantic import BaseModel
 
 from back.user_service.message_broker import rabbitmq
 
-from back.user_service.dao import UsersDAO
-from back.user_service.models import Users
+from back.user_service.db.dao import UsersDAO
+from back.user_service.db.models import Users
 from back.user_service.schemas.users import SUserCreate, SUserUpdate
 from back.user_service.auth import utils as auth_utils
 from back.user_service.auth.helpers import create_access_token, create_refresh_token

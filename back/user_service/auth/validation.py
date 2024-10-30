@@ -2,7 +2,7 @@ from fastapi import Depends,  Form
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 
-from back.user_service.dao import UsersDAO
+from back.user_service.db.dao import UsersDAO
 from back.user_service.auth.helpers import ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE, JWTPayload
 from back.user_service.auth import utils as auth_utils
 from back.user_service.schemas.users import SUser

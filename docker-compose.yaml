@@ -60,7 +60,7 @@ services:
     env_file:
       - .env-docker
     command: [ "back/user_service/app.sh" ]
-    #    command: sh -c "cd /back/portfolio_service && alembic upgrade head && cd ../../ && gunicorn back.portfolio_service.portfolio_main:portfolio_app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+    #    command: sh -c "cd /back/user_service && alembic upgrade head && cd ../../ && gunicorn back.user_service.user_main:user_app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001"
     ports:
       - "8001:8001"
     depends_on:
@@ -69,6 +69,37 @@ services:
     networks:
       default1:
         ipv4_address: 192.168.0.11
+
+  notification_db:
+    container_name: notification_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "notification_app"
+      POSTGRES_USER: "sqluser"
+      POSTGRES_PASSWORD: "sqlpass"
+    ports:
+      - "5434:5432"
+    networks:
+      default1:
+        ipv4_address: 192.168.0.102
+
+  notification_app:
+    container_name: notification_app
+    build:
+      context: .
+      dockerfile: docker/notification_service/Dockerfile
+    env_file:
+      - .env-docker
+    command: [ "back/notification_service/app.sh" ]
+    #    command: sh -c "cd /back/notification_service && alembic upgrade head && cd ../../ && faststream run back.notification_service.notification_main:notification_app --workers 4"
+    ports:
+      - "8002:8002"
+    depends_on:
+      - notification_db
+      - rabbitmq
+    networks:
+      default1:
+        ipv4_address: 192.168.0.12
 
 networks:
   default1:

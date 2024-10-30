@@ -29,7 +29,11 @@ class MarketDataSettings(BaseSettings):
 
 
 class NotificationSettings(BaseSettings):
-    pass
+    DB_NOTIFICATIONS_HOST: str = "192.168.0.102"
+    DB_NOTIFICATIONS_PORT: int = 5432
+    DB_NOTIFICATIONS_NAME: str = "notification_app"
+    DB_NOTIFICATIONS_USER: str = "sqluser"
+    DB_NOTIFICATIONS_PASSWORD: str = "sqlpass"
 
 
 class AnalyticsSettings(BaseSettings):

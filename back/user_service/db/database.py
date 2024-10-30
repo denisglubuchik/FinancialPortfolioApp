@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from back.config import UserSettings
 
 
-user_settings =UserSettings()
+user_settings = UserSettings()
 
 DB_URL = (f"postgresql+asyncpg://{user_settings.DB_USERS_USER}:"
           f"{user_settings.DB_USERS_PASSWORD}@"
