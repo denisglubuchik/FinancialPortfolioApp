@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
 from back.portfolio_service.routers.users import router as users_router
 from back.portfolio_service.routers.portfolio import router as portfolio_router
 from back.portfolio_service.routers.assets import router as assets_router
@@ -21,11 +22,12 @@ portfolio_app.include_router(portfolio_assets_router)
 
 @portfolio_app.on_event("startup")
 async def start_rabbit():
-    from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
-    await rabbit_broker.start()
+    try:
+        await rabbit_broker.start()
+    except Exception as e:
+        print(e)
 
 
 @portfolio_app.on_event("shutdown")
 async def stop_rabbit():
-    from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
     await rabbit_broker.stop()

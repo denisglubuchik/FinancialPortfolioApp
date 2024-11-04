@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
-from back.user_service.message_broker import rabbitmq
+from back.user_service.message_broker.producer import rabbit_producer
 
 from back.user_service.db.dao import UsersDAO
 from back.user_service.db.models import Users
@@ -50,7 +50,7 @@ async def user_register(
     new_user = new_user.model_dump()
     new_user["hashed_password"] = auth_utils.hash_password(new_user["hashed_password"])
     user: Users = await UsersDAO.insert(**new_user)
-    await rabbitmq.new_user(user.id, user.username)
+    await rabbit_producer.new_user(user.id, user.username)
     return user
 
 
@@ -92,7 +92,7 @@ class UpdatedUserAndToken(BaseModel):
 async def user_update(updated_user: SUserUpdate, current_user: SUser = Depends(get_current_auth_user)):
     updated_user = await UsersDAO.update(current_user.id, **updated_user.model_dump())
     if current_user.username != updated_user.username:
-        await rabbitmq.update_user(current_user.id, updated_user.username)
+        await rabbit_producer.update_user(current_user.id, updated_user.username)
         access_token = create_access_token(updated_user)
         return UpdatedUserAndToken(updated_user=updated_user,
                                    token=TokenInfo(access_token=access_token))
@@ -102,5 +102,5 @@ async def user_update(updated_user: SUserUpdate, current_user: SUser = Depends(g
 @router.delete("/users")
 async def user_delete(user: SUser = Depends(get_current_auth_user)):
     await UsersDAO.delete(user.id)
-    await rabbitmq.delete_user(user.id)
+    await rabbit_producer.delete_user(user.id)
     return {"message": "user deleted"}
