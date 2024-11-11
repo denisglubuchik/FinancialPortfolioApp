@@ -19,6 +19,11 @@ class UserNotFoundException(UserException):
     detail = "user not found"
 
 
+class UserWasntChangedException(UserException):
+    status_code = 400
+    detail = "you change nothing, so user wasn't changed"
+
+
 class InvalidTokenException(UserException):
     status_code = 401
 

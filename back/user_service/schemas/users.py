@@ -21,5 +21,5 @@ class SUser(BaseModel):
 
 
 class SUserUpdate(BaseModel):
-    username: str
-    email: str
+    username: str = "string"
+    email: str = "string"

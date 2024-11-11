@@ -1,5 +1,6 @@
 aio-pika==9.4.3
 aiormq==6.8.1
+aiosmtplib==3.0.2
 aiosqlite==0.20.0
 alembic==1.13.3
 annotated-types==0.7.0

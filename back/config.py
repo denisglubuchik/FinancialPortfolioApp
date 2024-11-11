@@ -35,6 +35,11 @@ class NotificationSettings(BaseSettings):
     DB_NOTIFICATIONS_USER: str = "sqluser"
     DB_NOTIFICATIONS_PASSWORD: str = "sqlpass"
 
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 465
+    SMTP_USER: str = "glubuchikdenis@gmail.com"
+    SMTP_PASSWORD: str = "qwwh nuhu wglr gfyg"
+
 
 class AnalyticsSettings(BaseSettings):
     pass

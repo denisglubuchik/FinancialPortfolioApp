@@ -1,4 +1,4 @@
-from faststream.rabbit import RabbitRouter
+from faststream.rabbit import RabbitRouter, RabbitExchange, ExchangeType
 
 from back.portfolio_service.database import async_session_maker
 from back.portfolio_service.repositories.users import UsersRepository
@@ -6,7 +6,10 @@ from back.portfolio_service.repositories.users import UsersRepository
 rabbit_router = RabbitRouter()
 
 
-@rabbit_router.subscriber("user_created")
+user_exchange = RabbitExchange("user_exchange", type=ExchangeType.DIRECT)
+
+
+@rabbit_router.subscriber("portfolio_user_created", user_exchange)
 async def handle_new_user(message):
     user_id = message["user_id"]
     username = message["username"]
@@ -15,7 +18,7 @@ async def handle_new_user(message):
         await session.commit()
 
 
-@rabbit_router.subscriber("user_updated")
+@rabbit_router.subscriber("portfolio_user_updated", user_exchange)
 async def handle_update_user(message):
     user_id = message["user_id"]
     username = message["username"]
@@ -24,7 +27,7 @@ async def handle_update_user(message):
         await session.commit()
 
 
-@rabbit_router.subscriber("user_deleted")
+@rabbit_router.subscriber("portfolio_user_deleted", user_exchange)
 async def handle_delete_user(message):
     user_id = message["user_id"]
     async with async_session_maker() as session:

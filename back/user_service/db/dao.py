@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert, update, delete
 
 from back.user_service.db.database import async_session_maker
-from back.user_service.db.models import Users
+from back.user_service.db.models import Users, VerificationTokens
 
 
 class BaseDAO:
@@ -54,3 +54,7 @@ class BaseDAO:
 
 class UsersDAO(BaseDAO):
     model = Users
+
+
+class VerificationTokensDAO(BaseDAO):
+    model = VerificationTokens
