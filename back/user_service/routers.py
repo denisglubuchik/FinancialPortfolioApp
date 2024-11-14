@@ -2,7 +2,7 @@ import random
 import string
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Form
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
@@ -19,7 +19,8 @@ from back.user_service.auth.validation import (
     get_current_auth_user,
 )
 from back.user_service.schemas.users import SUser
-from back.user_service.exceptions import UserAlreadyExistsException, UserWasntChangedException
+from back.user_service.exceptions import UserAlreadyExistsException, UserWasntChangedException, \
+    VerificationTokenNotFoundException, InvalidVerificationTokenException
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -123,6 +124,8 @@ def generate_verification_code() -> str:
 async def request_verification_code(user: SUser = Depends(get_current_auth_user)):
     code = generate_verification_code()
     try:
+        if current_token := await VerificationTokensDAO.find_one_or_none(user_id=user.id, is_used=False):
+            await VerificationTokensDAO.delete(current_token.id)
         await VerificationTokensDAO.insert(user_id=user.id, verification_token=code,
                                            is_used=False, expires_at=(datetime.utcnow() + timedelta(minutes=10)))
     except Exception as e:
@@ -132,5 +135,12 @@ async def request_verification_code(user: SUser = Depends(get_current_auth_user)
 
 
 @router.post("/verification_code")
-async def verify_email():
-    pass
+async def verify_email(user: SUser = Depends(get_current_auth_user), code: str = Form()):
+    token = await VerificationTokensDAO.find_one_or_none(user_id=user.id, is_used=False)
+    if not token:
+        raise VerificationTokenNotFoundException()
+    if token.verification_token != code:
+        raise InvalidVerificationTokenException()
+    await VerificationTokensDAO.update(token.id, is_used=True)
+    await UsersDAO.update(user.id, is_verified=True)
+    return {"message": "email verified"}

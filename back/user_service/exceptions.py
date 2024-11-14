@@ -46,3 +46,13 @@ class InvalidUsernameException(UserException):
 class InvalidPasswordException(UserException):
     status_code = 401
     detail = "invalid password"
+
+
+class VerificationTokenNotFoundException(UserException):
+    status_code = 404
+    detail = "verification token not found"
+
+
+class InvalidVerificationTokenException(UserException):
+    status_code = 401
+    detail = "invalid verification token"
