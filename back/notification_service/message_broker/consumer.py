@@ -28,13 +28,15 @@ async def handle_delete_user(message):
     await UsersDAO.delete(user_id)
 
 
-@rabbit_router.subscriber("email_verification")
+@rabbit_router.subscriber("email")
 async def handle_email_verification(message):
     user_id = message["user_id"]
-    email = message["email"]
     subject = message["subject"]
     body = message["message"]
     notification_type = "email"
+
+    email = (await UsersDAO.find_one_or_none(id=user_id)).email
+
     await send_email(email, subject, body)
     await NotificationsDAO.insert(
         user_id=user_id,

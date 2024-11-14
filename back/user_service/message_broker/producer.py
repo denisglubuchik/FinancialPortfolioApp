@@ -25,9 +25,13 @@ class Producer:
         await self.broker.publish(message, routing_key="portfolio_user_deleted", exchange=self.user_exch)
         await self.broker.publish(message, routing_key="notification_user_deleted", exchange=self.user_exch)
 
-    async def email_verification(self, user_id, email, code):
-        await self.broker.publish({"user_id": user_id, "email": email, "subject": "Email verification",
-                                   "message": code}, "email_verification")
+    async def email_verification(self, user_id, code):
+        await self.broker.publish({"user_id": user_id, "subject": "Email verification",
+                                   "message": code}, "email")
+
+    async def password_changed(self, user_id):
+        await self.broker.publish({"user_id": user_id, "subject": "Password changed",
+                                   "message": "Your password has been changed"}, "email")
 
 
 rabbit_producer = Producer(rabbit_broker, user_exchange)

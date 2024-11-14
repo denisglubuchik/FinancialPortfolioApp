@@ -20,7 +20,8 @@ from back.user_service.auth.validation import (
 )
 from back.user_service.schemas.users import SUser
 from back.user_service.exceptions import UserAlreadyExistsException, UserWasntChangedException, \
-    VerificationTokenNotFoundException, InvalidVerificationTokenException
+    VerificationTokenNotFoundException, InvalidVerificationTokenException, InvalidPasswordException, \
+    PasswordHasntChangedException
 
 http_bearer = HTTPBearer(auto_error=False)
 
@@ -38,7 +39,7 @@ router = APIRouter(
 )
 
 
-@router.get("/users/me/", response_model=SUser)
+@router.get("/me/", response_model=SUser)
 async def auth_user_check_self_info(
     user: SUser = Depends(get_current_auth_user),
 ):
@@ -90,7 +91,7 @@ class UpdatedUserAndToken(BaseModel):
     token: TokenInfo
 
 
-@router.put("/users",
+@router.put("/",
             response_model=SUser | UpdatedUserAndToken,
             response_model_exclude_none=True,
 )
@@ -109,7 +110,19 @@ async def user_update(updated_user: SUserUpdate, current_user: SUser = Depends(g
     return updated_user
 
 
-@router.delete("/users")
+@router.put("/password")
+async def user_update_password(current_password: str, new_password: str, user: SUser = Depends(get_current_auth_user)):
+    if not auth_utils.validate_password(current_password, user.hashed_password):
+        raise InvalidPasswordException()
+
+    new_password = auth_utils.hash_password(new_password)
+    await UsersDAO.update_password(user.id, new_password)
+
+    await rabbit_producer.password_changed(user.id)
+    return {"message": "password has been changed"}
+
+
+@router.delete("/")
 async def user_delete(user: SUser = Depends(get_current_auth_user)):
     await UsersDAO.delete(user.id)
     await rabbit_producer.delete_user(user.id)
@@ -130,7 +143,7 @@ async def request_verification_code(user: SUser = Depends(get_current_auth_user)
                                            is_used=False, expires_at=(datetime.utcnow() + timedelta(minutes=10)))
     except Exception as e:
         raise e
-    await rabbit_producer.email_verification(user.id, user.email, code)
+    await rabbit_producer.email_verification(user.id, code)
     return {"message": "verification code sent"}
 
 
