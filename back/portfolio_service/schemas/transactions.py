@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-class TransactionType(Enum):
+class TransactionType(str, Enum):
     buy = "buy"
     sell = "sell"
 

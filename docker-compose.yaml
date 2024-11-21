@@ -1,5 +1,16 @@
 version: "3.9"
 services:
+  api_gateway:
+    container_name: api_gateway
+    build:
+      context: .
+      dockerfile: docker/api_gateway/Dockerfile
+    ports:
+      - "7777:7777"
+    networks:
+      default1:
+        ipv4_address: 192.168.0.77
+
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:latest
@@ -36,6 +47,7 @@ services:
     depends_on:
       - portfolio_db
       - rabbitmq
+      - api_gateway
     networks:
       default1:
         ipv4_address: 192.168.0.10
@@ -67,6 +79,7 @@ services:
     depends_on:
       - user_db
       - rabbitmq
+      - api_gateway
     networks:
       default1:
         ipv4_address: 192.168.0.11

@@ -20,8 +20,7 @@ from back.user_service.auth.validation import (
 )
 from back.user_service.schemas.users import SUser
 from back.user_service.exceptions import UserAlreadyExistsException, UserWasntChangedException, \
-    VerificationTokenNotFoundException, InvalidVerificationTokenException, InvalidPasswordException, \
-    PasswordHasntChangedException
+    VerificationTokenNotFoundException, InvalidVerificationTokenException, InvalidPasswordException
 
 http_bearer = HTTPBearer(auto_error=False)
 
