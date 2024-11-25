@@ -1,7 +1,23 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
+
+
+class SUser(BaseModel):
+    id: int
+    username: str
+    hashed_password: str
+    is_verified: bool
+    email: str
+    registered_at: datetime
+
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
+
+
+def datetime_encoder(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
 
 
 class SUserCreate(BaseModel):
@@ -31,3 +47,9 @@ class STransactionCreate(BaseModel):
     @field_validator("transaction_date")
     def transaction_date(cls, v):
         return v.isoformat()
+
+
+class TokenInfo(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "Bearer"

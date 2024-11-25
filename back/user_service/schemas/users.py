@@ -13,6 +13,7 @@ class SUser(BaseModel):
     id: int
     username: str
     hashed_password: str
+    is_verified: bool
     email: str
     registered_at: datetime
 

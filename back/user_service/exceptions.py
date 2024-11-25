@@ -24,20 +24,6 @@ class UserWasntChangedException(UserException):
     detail = "you change nothing, so user wasn't changed"
 
 
-class InvalidTokenException(UserException):
-    status_code = 401
-
-    def __init__(self, e):
-        self.detail = f"invalid token {e}"
-
-
-class InvalidTokenTypeException(UserException):
-    status_code = 401
-
-    def __init__(self, current_token_type, token_type):
-        self.detail = f"invalid token type {current_token_type!r} expected {token_type!r}"
-
-
 class InvalidUsernameException(UserException):
     status_code = 401
     detail = "invalid username"
@@ -56,3 +42,18 @@ class VerificationTokenNotFoundException(UserException):
 class InvalidVerificationTokenException(UserException):
     status_code = 401
     detail = "invalid verification token"
+
+
+class InvalidTokenException(UserException):
+    status_code = 401
+
+    def __init__(self, e):
+        self.detail = f"invalid token {e}"
+
+
+class InvalidTokenTypeException(UserException):
+    status_code = 401
+
+    def __init__(self, current_token_type, token_type):
+        self.detail = f"invalid token type {current_token_type!r} expected {token_type!r}"
+

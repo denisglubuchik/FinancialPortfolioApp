@@ -57,7 +57,7 @@ class TransactionsService:
 
     async def delete_transaction(self, uow: IUnitOfWork, transaction_id: int):
         async with uow:
-            transaction = await uow.transactions.get_one(transaction_id)
+            transaction = await uow.transactions.get_one(id=transaction_id)
             if not transaction:
                 raise TransactionDoesntExists()
 

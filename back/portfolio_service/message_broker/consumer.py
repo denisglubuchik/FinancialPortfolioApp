@@ -31,5 +31,5 @@ async def handle_update_user(message):
 async def handle_delete_user(message):
     user_id = message["user_id"]
     async with async_session_maker() as session:
-        await UsersRepository(session).delete(id=user_id)
+        await UsersRepository(session).delete(int(user_id))
         await session.commit()

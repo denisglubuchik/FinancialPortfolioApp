@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from pydantic import BaseModel
 
-from back.user_service.auth import utils as auth_utils
-from back.user_service.schemas.users import SUser
+from back.gateway.auth import utils as auth_utils
+from back.gateway.schemas import SUser
 
 
 ACCESS_TOKEN_TYPE = "access"
