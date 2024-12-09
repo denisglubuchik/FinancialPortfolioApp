@@ -2,7 +2,7 @@ import random
 import string
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Form, Body
+from fastapi import APIRouter, Depends, Body
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
@@ -45,14 +45,14 @@ async def verify_credentials(credentials: Credentials) -> SUser:
     return user
 
 
-@router.get("/user/")
+@router.get("/user")
 async def get_user_by_username(username: str) -> SUser:
     if not (user := await UsersDAO.find_one_or_none(username=username)):
         raise UserNotFoundException()
     return user
 
 
-@router.post("/register/", response_model=SUser)
+@router.post("/register", response_model=SUser)
 async def user_register(
     new_user: SUserCreate,
 ):

@@ -25,7 +25,7 @@ services = {
 async def register(user: SUserCreate):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{services['user']}/users/register/", json=user.model_dump())
+            response = await client.post(f"{services['user']}/users/register", json=user.model_dump())
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:

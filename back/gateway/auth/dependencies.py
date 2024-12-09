@@ -43,7 +43,7 @@ async def get_user_by_token_sub(payload: JWTPayload) -> SUser:
 
     username: str | None = payload.sub
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{services['user']}/users/user/", params={"username": username})
+        response = await client.get(f"{services['user']}/users/user", params={"username": username})
         return SUser.model_validate(response.json())
 
 

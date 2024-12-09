@@ -47,3 +47,8 @@ class AssetAlreadyExistException(PortfolioException):
 class UserDoesntExistException(PortfolioException):
     status_code = 404
     detail = "User doesn't exist"
+
+
+class UserDoesntOwnPortfolioException(PortfolioException):
+    status_code = 404
+    detail = "User doesn't own this portfolio"
