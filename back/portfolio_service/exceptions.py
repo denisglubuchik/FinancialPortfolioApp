@@ -14,7 +14,7 @@ class PortfolioAssetDoesntExistCannotSellException(PortfolioException):
     detail = "Asset doesn't exist, you cannot sell it"
 
 
-class TransactionDoesntExists(PortfolioException):
+class TransactionDoesntExistsException(PortfolioException):
     status_code = 404
     detail = "Transaction doesn't exist"
 
@@ -52,3 +52,8 @@ class UserDoesntExistException(PortfolioException):
 class UserDoesntOwnPortfolioException(PortfolioException):
     status_code = 404
     detail = "User doesn't own this portfolio"
+
+
+class UserDoesntOwnTransactionException(PortfolioException):
+    status_code = 404
+    detail = "User doesn't own this transaction"
