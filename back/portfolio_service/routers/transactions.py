@@ -43,5 +43,5 @@ async def delete_transaction(
         transaction: STransaction = Depends(user_owns_transaction),
 ):
     await TransactionsService().delete_transaction(uow, transaction.id)
-
+    return {"message": "Transaction deleted"}
 

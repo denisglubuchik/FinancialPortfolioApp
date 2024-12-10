@@ -161,10 +161,13 @@ async def get_portfolio(portfolio_id: int):
 
 
 @api_gateway.post("/portfolio/{portfolio_id}/transactions")
-async def post_transaction(transaction: STransactionCreate):
+async def post_transaction(transaction: STransactionCreate, portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{services['portfolio']}/transactions/", json=transaction.model_dump())
+            response = await client.post(
+                f"{services['portfolio']}/transactions/?user_id={user.id}&portfolio_id={portfolio_id}",
+                json=transaction.model_dump()
+            )
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
@@ -176,10 +179,12 @@ async def post_transaction(transaction: STransactionCreate):
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/transactions")  # юзер может получить только свои транзакции
-async def get_transactions(portfolio_id: int):
+async def get_transactions(portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{services['portfolio']}/transactions/", params={"portfolio_id": portfolio_id})
+            response = await client.get(
+                f"{services['portfolio']}/transactions/?user_id={user.id}&portfolio_id={portfolio_id}",
+            )
             return response.json()
     except httpx.HTTPStatusError as e:
         return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
@@ -190,11 +195,10 @@ async def get_transactions(portfolio_id: int):
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/transactions/{transaction_id}")  # юзер не может получить чужие транзакции
-async def get_transaction(portfolio_id: int, transaction_id: int):
+async def get_transaction(transaction_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{services['portfolio']}/transactions/{transaction_id}",
-                                        params={"portfolio_id": portfolio_id})
+            response = await client.get(f"{services['portfolio']}/transactions/{transaction_id}?user_id={user.id}")
             return response.json()
     except httpx.HTTPStatusError as e:
         return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
@@ -205,14 +209,14 @@ async def get_transaction(portfolio_id: int, transaction_id: int):
 
 
 @api_gateway.delete("/portfolio/{portfolio_id}/transactions/{transaction_id}")
-async def delete_transaction(portfolio_id: int, transaction_id: int):
+async def delete_transaction(transaction_id: int, user: SUser = Depends(get_current_auth_user)):
     async with httpx.AsyncClient() as client:
-        response = await client.delete(f"{services['portfolio']}/transactions/{transaction_id}")
+        response = await client.delete(f"{services['portfolio']}/transactions/{transaction_id}?user_id={user.id}")
         return response.json()
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/assets")
-async def get_assets(portfolio_id: int):
+async def get_assets(portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{services['portfolio']}/portfolio_assets/{portfolio_id}")
+        response = await client.get(f"{services['portfolio']}/portfolio_assets/{portfolio_id}?user_id={user.id}")
         return response.json()

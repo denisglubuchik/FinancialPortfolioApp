@@ -1,10 +1,14 @@
 from pydantic import BaseModel
 
+from back.portfolio_service.schemas.assets import AssetType
+
 
 class SPortfolioAsset(BaseModel):
     id: int
-    portfolio_id: int
     asset_id: int
+    name: str
+    symbol: str
+    asset_type: AssetType
     quantity: float
 
     class Config:

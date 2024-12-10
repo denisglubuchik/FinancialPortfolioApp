@@ -37,7 +37,6 @@ class TransactionType(str, Enum):
 
 
 class STransactionCreate(BaseModel):
-    portfolio_id: int
     asset_id: int
     quantity: float
     transaction_type: TransactionType

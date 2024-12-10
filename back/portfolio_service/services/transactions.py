@@ -7,7 +7,9 @@ from back.portfolio_service.utils.uow import IUnitOfWork
 class TransactionsService:
     async def add_transaction(self, portfolio_id: int, uow: IUnitOfWork, transaction: STransactionCreate):
         async with uow:
-            transaction_id = await uow.transactions.add(transaction.model_dump())
+            trans_dict = transaction.model_dump()
+            trans_dict["portfolio_id"] = portfolio_id
+            transaction_id = await uow.transactions.add(trans_dict)
             portfolio_asset = await uow.portfolio_assets.get_one(portfolio_id=portfolio_id,
                                                        asset_id=transaction.asset_id)
             portfolio = await uow.portfolio.get_one(id=portfolio_id)
