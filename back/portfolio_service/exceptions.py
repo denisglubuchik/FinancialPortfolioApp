@@ -50,10 +50,10 @@ class UserDoesntExistException(PortfolioException):
 
 
 class UserDoesntOwnPortfolioException(PortfolioException):
-    status_code = 404
+    status_code = 403
     detail = "User doesn't own this portfolio"
 
 
 class UserDoesntOwnTransactionException(PortfolioException):
-    status_code = 404
+    status_code = 403
     detail = "User doesn't own this transaction"

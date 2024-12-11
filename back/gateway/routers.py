@@ -1,7 +1,7 @@
 import json
 
 import httpx
-from fastapi import FastAPI, Depends, Form
+from fastapi import FastAPI, Depends, Form, HTTPException
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
@@ -29,11 +29,11 @@ async def register(user: SUserCreate):
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.post("/login")
@@ -76,11 +76,11 @@ async def update_user(updated_user: SUserUpdate, current_user: SUser = Depends(g
         return updated_user_from_user_service
 
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text}
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.put("/users/password")
@@ -97,11 +97,11 @@ async def update_user_password(current_password: str, new_password: str, user: S
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text}
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/users/me")
@@ -131,11 +131,11 @@ async def delete_user(user: SUser = Depends(get_current_auth_user)):
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text}
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/users/verification_code")
@@ -147,17 +147,33 @@ async def get_verification_code(user: SUser = Depends(get_current_auth_user)):
 
 @api_gateway.post("/users/verification_code")
 async def post_verification_code(code: str = Form(), user: SUser = Depends(get_current_auth_user)):
-    async with httpx.AsyncClient() as client:
-        response = await client.post(f"{services['user']}/users/verification_code",
-                                     json={"user_id": user.id, "code": code})
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{services['user']}/users/verification_code",
+                                         json={"user_id": user.id, "code": code})
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/portfolio/{portfolio_id}")
 async def get_portfolio(portfolio_id: int):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{services['portfolio']}/portfolio/{portfolio_id}")
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{services['portfolio']}/portfolio/{portfolio_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.post("/portfolio/{portfolio_id}/transactions")
@@ -171,11 +187,11 @@ async def post_transaction(transaction: STransactionCreate, portfolio_id: int, u
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/transactions")  # юзер может получить только свои транзакции
@@ -185,13 +201,14 @@ async def get_transactions(portfolio_id: int, user: SUser = Depends(get_current_
             response = await client.get(
                 f"{services['portfolio']}/transactions/?user_id={user.id}&portfolio_id={portfolio_id}",
             )
+            response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/transactions/{transaction_id}")  # юзер не может получить чужие транзакции
@@ -201,22 +218,38 @@ async def get_transaction(transaction_id: int, user: SUser = Depends(get_current
             response = await client.get(f"{services['portfolio']}/transactions/{transaction_id}?user_id={user.id}")
             return response.json()
     except httpx.HTTPStatusError as e:
-        return {"error": str(e), "status_code": e.response.status_code, "body": e.response.text, }
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
     except json.decoder.JSONDecodeError:
-        return {"error": "Invalid JSON response", "body": response.text}
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.delete("/portfolio/{portfolio_id}/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: int, user: SUser = Depends(get_current_auth_user)):
-    async with httpx.AsyncClient() as client:
-        response = await client.delete(f"{services['portfolio']}/transactions/{transaction_id}?user_id={user.id}")
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(f"{services['portfolio']}/transactions/{transaction_id}?user_id={user.id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_gateway.get("/portfolio/{portfolio_id}/assets")
 async def get_assets(portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{services['portfolio']}/portfolio_assets/{portfolio_id}?user_id={user.id}")
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{services['portfolio']}/portfolio_assets/{portfolio_id}?user_id={user.id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
