@@ -15,6 +15,12 @@ class SPortfolioAsset(BaseModel):
         from_attributes = True
 
 
+class SPortfolioAssetMarketData(SPortfolioAsset):
+    current_price: float
+    usd_24h_change: float
+    last_updated: str
+
+
 class SPortfolioAssetCreate(BaseModel):
     portfolio_id: int
     asset_id: int

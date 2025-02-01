@@ -1,11 +1,20 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class EnvBaseSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
-class RabbitMQSettings(BaseSettings):
+class RabbitMQSettings(EnvBaseSettings):
     RABBITMQ_MQ: str = "amqp://guest:guest@192.168.0.200:5672/"
 
 
-class UserSettings(BaseSettings):
+class RedisSettings(EnvBaseSettings):
+    REDIS_HOST: str = "192.168.0.201"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 1
+
+
+class UserSettings(EnvBaseSettings):
     DB_USERS_HOST: str = "192.168.0.101"
     DB_USERS_PORT: int = 5433
     DB_USERS_NAME: str = "user_app"
@@ -16,7 +25,7 @@ class UserSettings(BaseSettings):
     ALGORITHM: str = "HS256"
 
 
-class PortfolioSettings(BaseSettings):
+class PortfolioSettings(EnvBaseSettings):
     DB_PORTFOLIOS_HOST: str = "192.168.0.100"
     DB_PORTFOLIOS_PORT: int = 5432
     DB_PORTFOLIOS_NAME: str = "portfolio_app"
@@ -24,11 +33,12 @@ class PortfolioSettings(BaseSettings):
     DB_PORTFOLIOS_PASSWORD: str = "sqlpass"
 
 
-class MarketDataSettings(BaseSettings):
-    pass
+class MarketDataSettings(EnvBaseSettings):
+    COINGECKO_API_KEY: str
+    COINGECKO_URL: str
 
 
-class NotificationSettings(BaseSettings):
+class NotificationSettings(EnvBaseSettings):
     DB_NOTIFICATIONS_HOST: str = "192.168.0.102"
     DB_NOTIFICATIONS_PORT: int = 5432
     DB_NOTIFICATIONS_NAME: str = "notification_app"
@@ -41,5 +51,5 @@ class NotificationSettings(BaseSettings):
     SMTP_PASSWORD: str = "qwwh nuhu wglr gfyg"
 
 
-class AnalyticsSettings(BaseSettings):
+class AnalyticsSettings(EnvBaseSettings):
     pass

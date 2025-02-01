@@ -9,7 +9,7 @@ from back.portfolio_service.models.assets import Assets
 class PortfolioAssetsRepository(SQLAlchemyRepository):
     model = PortfolioAssets
 
-    async def get_one(self, asset_id: int):
+    async def get_one(self, portfolio_id: int, asset_id: int):
         pa = aliased(PortfolioAssets)
         a = aliased(Assets)
 
@@ -19,7 +19,7 @@ class PortfolioAssetsRepository(SQLAlchemyRepository):
             )
             .select_from(pa)
             .join(a, pa.asset_id == a.id)
-            .where(pa.asset_id == asset_id)
+            .where(pa.asset_id == asset_id and pa.portfolio_id == portfolio_id)
         )
         res = await self.session.execute(query)
         return res.mappings().first()
