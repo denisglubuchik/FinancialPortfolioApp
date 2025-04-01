@@ -28,6 +28,14 @@ async def get_portfolio(portfolio_id: int, uow: UOWDep) -> SPortfolio:
     return portfolio
 
 
+@router.get("/by_user_id/{user_id}")
+async def get_portfolio_by_user_id(user_id: int, uow: UOWDep) -> SPortfolio:
+    portfolio = await PortfolioService().get_portfolio(uow, user_id=user_id)
+    if not portfolio:
+        raise PortfolioDoesntExistException()
+    return portfolio
+
+
 @router.delete("/{portfolio_id}")
 async def delete_portfolio(portfolio_id: int, uow: UOWDep):
     portfolio = await PortfolioService().get_portfolio_by_id(uow, portfolio_id)

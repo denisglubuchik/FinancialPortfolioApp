@@ -3,9 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-back/*/alembic.ini
 .idea
 .env-docker
+.env-bot
 
 # C extensions
 *.so

@@ -1,5 +1,3 @@
-import json
-
 import httpx
 from fastapi import Form, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -39,7 +37,7 @@ async def validate_token_type(
 
 
 async def get_user_by_token_sub(payload: JWTPayload) -> SUser:
-    from back.gateway.routers import services
+    from back.gateway.routers.api import services
 
     username: str | None = payload.sub
     async with httpx.AsyncClient() as client:
@@ -67,7 +65,7 @@ async def validate_user_creds(
         username: str = Form(),
         password: str = Form(),
 ) -> SUser:
-    from back.gateway.routers import services
+    from back.gateway.routers.api import services
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{services['user']}/users/verify_credentials",

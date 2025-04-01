@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   api_gateway:
     container_name: api_gateway
@@ -8,8 +7,7 @@ services:
     ports:
       - "7777:7777"
     networks:
-      default1:
-        ipv4_address: 192.168.0.77
+      - app_network
 
   rabbitmq:
     container_name: rabbitmq
@@ -17,8 +15,7 @@ services:
     ports:
       - "5672:5672"
     networks:
-      default1:
-        ipv4_address: 192.168.0.200
+      - app_network
 
   redis:
     container_name: redis
@@ -26,8 +23,7 @@ services:
     ports:
       - "6380:6379"
     networks:
-      default1:
-        ipv4_address: 192.168.0.201
+      - app_network
 
   portfolio_db:
     container_name: portfolio_postgres
@@ -37,10 +33,9 @@ services:
       POSTGRES_USER: "sqluser"
       POSTGRES_PASSWORD: "sqlpass"
     ports:
-      - "5432:5432"
+      - "5440:5432"
     networks:
-      default1:
-        ipv4_address: 192.168.0.100
+      - app_network
 
   portfolio_app:
     container_name: portfolio_app
@@ -58,8 +53,7 @@ services:
       - rabbitmq
       - api_gateway
     networks:
-      default1:
-        ipv4_address: 192.168.0.10
+      - app_network
 
   user_db:
     container_name: user_postgres
@@ -69,10 +63,9 @@ services:
       POSTGRES_USER: "sqluser"
       POSTGRES_PASSWORD: "sqlpass"
     ports:
-      - "5433:5432"
+      - "5441:5432"
     networks:
-      default1:
-        ipv4_address: 192.168.0.101
+      - app_network
 
   user_app:
     container_name: user_app
@@ -90,8 +83,7 @@ services:
       - rabbitmq
       - api_gateway
     networks:
-      default1:
-        ipv4_address: 192.168.0.11
+      - app_network
 
   notification_db:
     container_name: notification_postgres
@@ -101,10 +93,9 @@ services:
       POSTGRES_USER: "sqluser"
       POSTGRES_PASSWORD: "sqlpass"
     ports:
-      - "5434:5432"
+      - "5442:5432"
     networks:
-      default1:
-        ipv4_address: 192.168.0.102
+      - app_network
 
   notification_app:
     container_name: notification_app
@@ -121,8 +112,7 @@ services:
       - notification_db
       - rabbitmq
     networks:
-      default1:
-        ipv4_address: 192.168.0.12
+      - app_network
 
   market_data_app:
     container_name: market_data_app
@@ -136,13 +126,19 @@ services:
     depends_on:
       - redis
     networks:
-      default1:
-        ipv4_address: 192.168.0.13
+      - app_network
+
+  bot:
+    container_name: tg_bot
+    build:
+      context: .
+      dockerfile: docker/bot/Dockerfile
+    env_file:
+      - .env-bot
+    depends_on:
+      - redis
+    networks:
+      - app_network
 
 networks:
-  default1:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 192.168.0.0/24
+  app_network:

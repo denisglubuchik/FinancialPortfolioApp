@@ -1,22 +1,27 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class EnvBaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env-docker", env_file_encoding="utf-8")
 
 
 class RabbitMQSettings(EnvBaseSettings):
-    RABBITMQ_MQ: str = "amqp://guest:guest@192.168.0.200:5672/"
+    RABBIT_MQ_HOST: str = "rabbitmq"
+    RABBIT_MQ_PORT: int = 5672
+
+    @property
+    def RABBITMQ_MQ(self):
+        return f"amqp://guest:guest@{self.RABBIT_MQ_HOST}:{self.RABBIT_MQ_PORT}/"
 
 
 class RedisSettings(EnvBaseSettings):
-    REDIS_HOST: str = "192.168.0.201"
+    REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 1
 
 
 class UserSettings(EnvBaseSettings):
-    DB_USERS_HOST: str = "192.168.0.101"
-    DB_USERS_PORT: int = 5433
+    DB_USERS_HOST: str = "localhost"
+    DB_USERS_PORT: int = 5441
     DB_USERS_NAME: str = "user_app"
     DB_USERS_USER: str = "sqluser"
     DB_USERS_PASSWORD: str = "sqlpass"
@@ -26,7 +31,7 @@ class UserSettings(EnvBaseSettings):
 
 
 class PortfolioSettings(EnvBaseSettings):
-    DB_PORTFOLIOS_HOST: str = "192.168.0.100"
+    DB_PORTFOLIOS_HOST: str = "portfolio_db"
     DB_PORTFOLIOS_PORT: int = 5432
     DB_PORTFOLIOS_NAME: str = "portfolio_app"
     DB_PORTFOLIOS_USER: str = "sqluser"
@@ -39,7 +44,7 @@ class MarketDataSettings(EnvBaseSettings):
 
 
 class NotificationSettings(EnvBaseSettings):
-    DB_NOTIFICATIONS_HOST: str = "192.168.0.102"
+    DB_NOTIFICATIONS_HOST: str = "notification_db"
     DB_NOTIFICATIONS_PORT: int = 5432
     DB_NOTIFICATIONS_NAME: str = "notification_app"
     DB_NOTIFICATIONS_USER: str = "sqluser"
@@ -49,7 +54,3 @@ class NotificationSettings(EnvBaseSettings):
     SMTP_PORT: int = 465
     SMTP_USER: str = "glubuchikdenis@gmail.com"
     SMTP_PASSWORD: str = "qwwh nuhu wglr gfyg"
-
-
-class AnalyticsSettings(EnvBaseSettings):
-    pass

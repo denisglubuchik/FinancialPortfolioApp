@@ -1,23 +1,36 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
-from back.portfolio_service.routers.users import router as users_router
-from back.portfolio_service.routers.portfolio import router as portfolio_router
-from back.portfolio_service.routers.assets import router as assets_router
-from back.portfolio_service.routers.transactions import router as transactions_router
-from back.portfolio_service.routers.portfolio_assets import router as portfolio_assets_router
+from back.portfolio_service.routers import all_routers
+from back.portfolio_service.utils.uow import UnitOfWork
 
-# from back.config import PortfolioSettings
+from back.portfolio_service.services.portfolio import PortfolioService
 
 portfolio_app = FastAPI()
 
-portfolio_app.include_router(users_router)
-portfolio_app.include_router(portfolio_router)
-portfolio_app.include_router(assets_router)
-portfolio_app.include_router(transactions_router)
-portfolio_app.include_router(portfolio_assets_router)
+for router in all_routers:
+    portfolio_app.include_router(router)
 
-# portfolio_settings = PortfolioSettings()
+
+@portfolio_app.middleware("http")
+async def update_portfolio_value_middleware(request: Request, call_next):
+    if request.url.path in ["/docs", "/openapi.json"]:
+        return await call_next(request)
+
+    response = await call_next(request)
+
+    user_id = request.headers.get("X-User-ID")
+
+    if user_id:
+        try:
+            user_id = int(user_id)
+            portfolio_id = await PortfolioService().get_portfolio(UnitOfWork(), user_id=user_id)
+            if portfolio_id:
+                await PortfolioService().update_portfolio_value(UnitOfWork(), portfolio_id.id)
+        except ValueError:
+            print(f"Некорректный user_id: {user_id}")
+
+    return response
 
 
 @portfolio_app.on_event("startup")

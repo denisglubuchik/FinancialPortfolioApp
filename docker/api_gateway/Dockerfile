@@ -9,4 +9,4 @@ RUN pip install -r back/requirements.txt
 COPY back/gateway back/gateway
 COPY back/config.py back/
 
-CMD ["gunicorn", "back.gateway.routers:api_gateway", "--workers", "3", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind=0.0.0.0:7777"]
+CMD ["gunicorn", "back.gateway.gateway_main:api_gateway", "--workers", "3", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind=0.0.0.0:7777"]

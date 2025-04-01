@@ -9,7 +9,23 @@ from back.market_data_service.redis import RedisClient
 market_data_settings = MarketDataSettings()
 redis_settings = RedisSettings()
 
-CRYPTO_ASSETS = ["bitcoin", "ethereum", "solana"]
+CRYPTO_ASSETS = assets = cryptos = [
+    "bitcoin", "ethereum", "solana", "tether", "usd-coin", "ripple", "binancecoin",
+    "the-open-network", "dogecoin", "shiba-inu", "grass", "official-trump", "optimism",
+    "ethereum-classic", "berachain-bera", "cardano", "tron", "chainlink", "avalanche-2",
+    "leo-token", "stellar", "sui", "hedera-hashgraph", "litecoin", "polkadot", "bitcoin-cash",
+    "bitget-token", "pi-network", "hyperliquid", "whitebit", "monero", "layerzero", "uniswap",
+    "near", "aptos", "pepe", "arbitrum", "dai", "okb", "pudgy-penguins", "internet-computer",
+    "tokenize-xchange", "gatechain-token", "ondo-finance", "mantle", "aave", "crypto-com-chain",
+    "ethena", "bittensor", "vechain", "cosmos", "celestia", "render-token", "polygon-ecosystem-token",
+    "kaspa", "filecoin", "sonic-3", "algorand", "fasttoken", "jupiter", "story-2", "fetch-ai",
+    "kucoin-shares", "movement", "maker", "nexo", "immutable-x", "worldcoin", "bonk", "sei-network",
+    "theta-token", "eos", "gala", "dydx", "the-sandbox", "jito-governance-token", "iota",
+    "pancakeswap-token", "zcash", "honey-3", "walrus-2", "dogwifcoin", "starknet", "thorchain",
+    "apecoin", "aerodrome-finance", "matic-network", "trust-wallet-token", "morpho", "plume"
+]
+
+
 
 
 async def update_market_data(market_data_fetcher: MarketDataFetcher, redis_client: RedisClient):
@@ -29,7 +45,7 @@ async def update_market_data(market_data_fetcher: MarketDataFetcher, redis_clien
 async def start_scheduler(market_fetcher: MarketDataFetcher, redis_client: RedisClient):
     scheduler = AsyncIOScheduler()
 
-    scheduler.add_job(update_market_data, 'interval', minutes=1, args=[market_fetcher, redis_client])
+    scheduler.add_job(update_market_data, 'interval', minutes=10, args=[market_fetcher, redis_client])
     scheduler.start()
 
     try:

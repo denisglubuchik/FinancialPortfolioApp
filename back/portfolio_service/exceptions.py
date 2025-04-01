@@ -18,6 +18,10 @@ class TransactionDoesntExistsException(PortfolioException):
     status_code = 404
     detail = "Transaction doesn't exist"
 
+class TransactionCannotConductException(PortfolioException):
+    status_code = 409
+    detail = "Can not conduct transaction"
+
 
 class PortfolioAlreadyExistException(PortfolioException):
     status_code = 409

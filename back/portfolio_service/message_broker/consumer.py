@@ -1,6 +1,7 @@
 from faststream.rabbit import RabbitRouter, RabbitExchange, ExchangeType
 
 from back.portfolio_service.database import async_session_maker
+from back.portfolio_service.repositories.portfolio import PortfolioRepository
 from back.portfolio_service.repositories.users import UsersRepository
 
 rabbit_router = RabbitRouter()
@@ -15,6 +16,7 @@ async def handle_new_user(message):
     username = message["username"]
     async with async_session_maker() as session:
         await UsersRepository(session).add({"id": user_id, "username": username})
+        await PortfolioRepository(session).add({"user_id": user_id})
         await session.commit()
 
 

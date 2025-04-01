@@ -1,4 +1,5 @@
-from back.portfolio_service.exceptions import PortfolioAssetDoesntExistCannotSellException, TransactionDoesntExistsException
+from back.portfolio_service.exceptions import PortfolioAssetDoesntExistCannotSellException, \
+    TransactionDoesntExistsException, TransactionCannotConductException
 from back.portfolio_service.schemas.transactions import STransactionCreate, TransactionType
 from back.portfolio_service.schemas.portfolio_assets import SPortfolioAssetCreate, SPortfolioAssetUpdate
 from back.portfolio_service.utils.uow import IUnitOfWork
@@ -22,14 +23,23 @@ class TransactionsService:
                         quantity=portfolio_asset.quantity + transaction.quantity
                     )
                     total_invested = portfolio.total_invested + (transaction.price * transaction.quantity)
+                    await uow.portfolio_assets.update(portfolio_asset.id, new_portfolio_asset.model_dump())
                 elif transaction.transaction_type == TransactionType.sell:
-                    new_portfolio_asset = SPortfolioAssetUpdate(
-                        portfolio_id=portfolio_id,
-                        asset_id=transaction.asset_id,
-                        quantity=portfolio_asset.quantity - transaction.quantity
-                    )
-                    total_invested = portfolio.total_invested - (transaction.price * transaction.quantity)
-                await uow.portfolio_assets.update(portfolio_asset.id, new_portfolio_asset.model_dump())
+                    if transaction.quantity > portfolio_asset.quantity:
+                        raise TransactionCannotConductException()
+
+                    elif transaction.quantity == portfolio_asset.quantity:
+                        await uow.portfolio_assets.delete(portfolio_asset.id)
+                        total_invested = portfolio.total_invested - (transaction.price * transaction.quantity)
+
+                    else:
+                        new_portfolio_asset = SPortfolioAssetUpdate(
+                            portfolio_id=portfolio_id,
+                            asset_id=transaction.asset_id,
+                            quantity=portfolio_asset.quantity - transaction.quantity
+                        )
+                        total_invested = portfolio.total_invested - (transaction.price * transaction.quantity)
+                        await uow.portfolio_assets.update(portfolio_asset.id, new_portfolio_asset.model_dump())
             else:
                 if transaction.transaction_type == TransactionType.buy:
                     new_portfolio_asset = SPortfolioAssetCreate(

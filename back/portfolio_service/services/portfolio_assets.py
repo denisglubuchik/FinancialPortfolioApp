@@ -22,7 +22,7 @@ class PortfolioAssetsService:
         await redis_client.close()
 
         for portfolio_asset in portfolio_assets:
-            portfolio_asset["current_price"] = market_data[portfolio_asset["name"]]["current_price"]
+            portfolio_asset["current_price"] = float(market_data[portfolio_asset["name"]]["current_price"])
             portfolio_asset["usd_24h_change"] = market_data[portfolio_asset["name"]]["usd_24h_change"]
             portfolio_asset["last_updated"] = market_data[portfolio_asset["name"]]["last_updated"]
 

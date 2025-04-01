@@ -1,7 +1,7 @@
 import json
 
 import httpx
-from fastapi import FastAPI, Depends, Form, HTTPException
+from fastapi import Depends, Form, HTTPException, APIRouter
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
@@ -11,7 +11,9 @@ from back.gateway.schemas import SUserCreate, STransactionCreate, TokenInfo, SUs
 
 http_bearer = HTTPBearer(auto_error=False)
 
-api_gateway = FastAPI(
+router = APIRouter(
+    prefix="/api",
+    tags=["api"],
     dependencies=[Depends(http_bearer)]
 )
 
@@ -21,7 +23,7 @@ services = {
 }
 
 
-@api_gateway.post("/register")
+@router.post("/register")
 async def register(user: SUserCreate):
     try:
         async with httpx.AsyncClient() as client:
@@ -36,7 +38,7 @@ async def register(user: SUserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.post("/login")
+@router.post("/login")
 async def login(user: SUser = Depends(validate_user_creds)):
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)
@@ -51,7 +53,7 @@ class UpdatedUserAndToken(BaseModel):
     token: TokenInfo
 
 
-@api_gateway.put(
+@router.put(
     "/users/update",
     response_model=SUser | UpdatedUserAndToken,
     response_model_exclude_none=True
@@ -83,7 +85,7 @@ async def update_user(updated_user: SUserUpdate, current_user: SUser = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.put("/users/password")
+@router.put("/users/password")
 async def update_user_password(current_password: str, new_password: str, user: SUser = Depends(get_current_auth_user)):
     json_payload = json.dumps({
         "current_password": current_password,
@@ -104,12 +106,12 @@ async def update_user_password(current_password: str, new_password: str, user: S
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/users/me")
+@router.get("/users/me")
 async def get_me(user: SUser = Depends(get_current_auth_user)) -> SUser:
     return user
 
 
-@api_gateway.post(
+@router.post(
     "/users/refresh",
     response_model=TokenInfo,
     response_model_exclude_none=True,
@@ -123,7 +125,7 @@ async def auth_refresh_jwt(
     )
 
 
-@api_gateway.delete("/users")
+@router.delete("/users")
 async def delete_user(user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -138,14 +140,14 @@ async def delete_user(user: SUser = Depends(get_current_auth_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/users/verification_code")
+@router.get("/users/verification_code")
 async def get_verification_code(user: SUser = Depends(get_current_auth_user)):
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{services['user']}/users/verification_code", params={"user_id": user.id})
         return response.json()
 
 
-@api_gateway.post("/users/verification_code")
+@router.post("/users/verification_code")
 async def post_verification_code(code: str = Form(), user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -161,7 +163,22 @@ async def post_verification_code(code: str = Form(), user: SUser = Depends(get_c
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/portfolio/{portfolio_id}")
+@router.get("/portfolio/by_user_id/{user_id}")
+async def get_portfolio_by_user_id(user_id: int):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{services['portfolio']}/portfolio/by_user_id/{user_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=e.response.json().get("detail"))
+    except json.decoder.JSONDecodeError:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response, {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/portfolio/{portfolio_id}")
 async def get_portfolio(portfolio_id: int):
     try:
         async with httpx.AsyncClient() as client:
@@ -176,7 +193,7 @@ async def get_portfolio(portfolio_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.post("/portfolio/{portfolio_id}/transactions")
+@router.post("/portfolio/{portfolio_id}/transactions")
 async def post_transaction(transaction: STransactionCreate, portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -194,7 +211,7 @@ async def post_transaction(transaction: STransactionCreate, portfolio_id: int, u
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/portfolio/{portfolio_id}/transactions")  # юзер может получить только свои транзакции
+@router.get("/portfolio/{portfolio_id}/transactions")  # юзер может получить только свои транзакции
 async def get_transactions(portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -211,7 +228,7 @@ async def get_transactions(portfolio_id: int, user: SUser = Depends(get_current_
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/portfolio/{portfolio_id}/transactions/{transaction_id}")  # юзер не может получить чужие транзакции
+@router.get("/portfolio/{portfolio_id}/transactions/{transaction_id}")  # юзер не может получить чужие транзакции
 async def get_transaction(transaction_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -225,7 +242,7 @@ async def get_transaction(transaction_id: int, user: SUser = Depends(get_current
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.delete("/portfolio/{portfolio_id}/transactions/{transaction_id}")
+@router.delete("/portfolio/{portfolio_id}/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
@@ -240,7 +257,7 @@ async def delete_transaction(transaction_id: int, user: SUser = Depends(get_curr
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@api_gateway.get("/portfolio/{portfolio_id}/assets")
+@router.get("/portfolio/{portfolio_id}/assets")
 async def get_assets(portfolio_id: int, user: SUser = Depends(get_current_auth_user)):
     try:
         async with httpx.AsyncClient() as client:
