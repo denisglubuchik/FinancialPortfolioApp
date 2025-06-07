@@ -62,9 +62,9 @@ class TransactionsService:
             transaction = await uow.transactions.get_one(id=transaction_id)
             return transaction
 
-    async def get_all_transactions(self, uow: IUnitOfWork, portfolio_id: int):
+    async def get_all_transactions(self, uow: IUnitOfWork, portfolio_id: int, **kwargs):
         async with uow:
-            transactions = await uow.transactions.get_all(portfolio_id=portfolio_id)
+            transactions = await uow.transactions.get_all(portfolio_id=portfolio_id, **kwargs)
             return transactions
 
     async def delete_transaction(self, uow: IUnitOfWork, transaction_id: int):

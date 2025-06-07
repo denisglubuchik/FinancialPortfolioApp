@@ -25,6 +25,7 @@ async def add_transaction(
 async def get_transactions(
         uow: UOWDep,
         portfolio_id: int = Depends(user_owns_portfolio),
+        portfolio_asset_id: int = None
 ) -> list[STransaction]:
     transactions = await TransactionsService().get_all_transactions(uow, portfolio_id)
     return transactions

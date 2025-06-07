@@ -13,7 +13,7 @@ class Transactions(Base):
     asset_id: Mapped[int] = mapped_column(ForeignKey("assets.id"))
     transaction_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType))
     quantity: Mapped[float]
-    price: Mapped[int]
+    price: Mapped[float]
     total_price: Mapped[float] = mapped_column(Computed("quantity * price"))
     transaction_date = mapped_column(DateTime(timezone=True), default=func.now())
 

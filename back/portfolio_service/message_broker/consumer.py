@@ -6,8 +6,8 @@ from back.portfolio_service.repositories.users import UsersRepository
 
 rabbit_router = RabbitRouter()
 
-
 user_exchange = RabbitExchange("user_exchange", type=ExchangeType.DIRECT)
+
 
 
 @rabbit_router.subscriber("portfolio_user_created", user_exchange)

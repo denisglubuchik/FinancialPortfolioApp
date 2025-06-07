@@ -15,7 +15,7 @@ class STransaction(BaseModel):
     asset_id: int
     transaction_type: TransactionType
     quantity: float
-    price: int
+    price: float
     total_price: int
     transaction_date: datetime
 
@@ -27,5 +27,5 @@ class STransactionCreate(BaseModel):
     asset_id: int
     quantity: float
     transaction_type: TransactionType
-    price: int
+    price: float
     transaction_date: datetime

@@ -4,6 +4,7 @@ from sqlalchemy.orm import aliased
 from back.portfolio_service.repositories.base import SQLAlchemyRepository
 from back.portfolio_service.models.portfolio_assets import PortfolioAssets
 from back.portfolio_service.models.assets import Assets
+from back.portfolio_service.models.portfolio import Portfolio
 
 
 class PortfolioAssetsRepository(SQLAlchemyRepository):
@@ -39,3 +40,33 @@ class PortfolioAssetsRepository(SQLAlchemyRepository):
 
         res = await self.session.execute(query)
         return [dict(row) for row in res.mappings().all()]
+
+    async def get_unique_asset_names_with_quantity(self):
+        """Получает список уникальных имен активов из всех портфолио где quantity > 0"""
+        query = (
+            select(Assets.name)
+            .select_from(Assets)
+            .join(PortfolioAssets, Assets.id == PortfolioAssets.asset_id)
+            .where(PortfolioAssets.quantity > 0)
+            .distinct()
+        )
+        
+        res = await self.session.execute(query)
+        return [row.name for row in res.all()]
+    
+    async def get_users_with_asset(self, asset_name: str):
+        """Получает список user_id пользователей, у которых есть конкретный актив"""
+        query = (
+            select(Portfolio.user_id)
+            .select_from(Portfolio)
+            .join(PortfolioAssets, Portfolio.id == PortfolioAssets.portfolio_id)
+            .join(Assets, PortfolioAssets.asset_id == Assets.id)
+            .where(
+                Assets.name == asset_name,
+                PortfolioAssets.quantity > 0
+            )
+            .distinct()
+        )
+        
+        res = await self.session.execute(query)
+        return [row.user_id for row in res.all()]
