@@ -1,20 +1,35 @@
-from faststream import FastStream
-from faststream.rabbit import RabbitBroker
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 
-from back.config import RabbitMQSettings
-from back.notification_service.message_broker.consumer import rabbit_router
-
-rabbit_broker = RabbitBroker(RabbitMQSettings().RABBITMQ_MQ)
-rabbit_broker.include_router(rabbit_router)
-
-notification_app = FastStream(rabbit_broker)
+from back.notification_service.message_broker.rabbitmq import rabbit_broker
+from back.notification_service.api import notification_router
 
 
-@notification_app.after_startup
-async def start_rabbit():
-    await rabbit_broker.start()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # STARTUP
+    try:
+        await rabbit_broker.start()
+        print("✅ RabbitMQ broker started in notification service")
+    except Exception as e:
+        print(f"❌ Failed to start RabbitMQ broker: {e}")
+        
+    yield  # Приложение работает здесь
+    
+    # SHUTDOWN
+    try:
+        await rabbit_broker.stop()
+        print("✅ RabbitMQ broker stopped in notification service")
+    except Exception as e:
+        print(f"⚠️ RabbitMQ broker shutdown error: {e}")
 
 
-@notification_app.after_shutdown
-async def stop_rabbit():
-    await rabbit_broker.close()
+# Create combined app
+notification_app = FastAPI(
+    title="Notification Service",
+    description="Combined FastAPI + FastStream notification service",
+    lifespan=lifespan
+)
+
+# Include the notification API routes
+notification_app.include_router(notification_router)
