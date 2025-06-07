@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.text import Const
 
 from bot.handlers.portfolio.portfolio_main_menu import router as portfolio_router, PortfolioMenu
 from bot.handlers.user_profile import dialog as user_profile_dialog, ProfileStates
-from bot.handlers.market_data import dialog as market_data_dialog, MarketDataStates
+from bot.handlers.market_data import MarketDataStates
 from bot.middlewares.portfolio import PortfolioMiddleware
 from bot.middlewares.users import UsersMiddleware
 
@@ -49,7 +49,6 @@ router.include_routers(
     dialog,
     portfolio_router,
     user_profile_dialog,
-    market_data_dialog
 )
 
 @router.message(Command("menu"))

@@ -4,12 +4,16 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 
 def get_handlers_router() -> Router:
     from . import start, menu
+    from .market_data import router as market_data_router
 
     router = Router()
+
     router.include_routers(
         menu.router,
         start.router,
     )
+
+    router.include_router(market_data_router)
 
     return router
 

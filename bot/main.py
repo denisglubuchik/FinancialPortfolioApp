@@ -7,6 +7,7 @@ from bot.core.loader import dp, bot
 from bot.handlers import get_handlers_router, setup_commands_menu, delete_commands_menu
 from bot.middlewares import register_middlewares
 from bot.utils.logging import setup_logging_base_config
+from bot.tasks.notification_polling import notification_polling
 
 setup_logging_base_config()
 logger = logging.getLogger(__name__)
@@ -24,12 +25,18 @@ async def on_startup() -> None:
     logger.info((await bot.get_me()).model_dump_json(indent=4, exclude_none=True))
 
     await setup_commands_menu(bot)
+    
+    # Start background tasks
+    notification_polling.start()
 
     logger.info("bot started")
 
 
 async def on_shutdown() -> None:
     logger.info("bot stopping...")
+    
+    # Stop background tasks
+    await notification_polling.stop()
 
     await delete_commands_menu(bot)
 

@@ -16,6 +16,14 @@ redis = Redis(
         db=settings.REDIS_DB
     )
 )
+
+market_redis = Redis(
+    connection_pool=ConnectionPool(
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        db=settings.MARKET_REDIS_DB
+    )
+)
 storage = RedisStorage(
     redis=redis,
     key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True)

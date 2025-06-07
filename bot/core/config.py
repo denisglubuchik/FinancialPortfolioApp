@@ -8,7 +8,7 @@ class RedisSettings(EnvBaseSettings):
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 2
-
+    MARKET_REDIS_DB: int = 1
 
 class BotSettings(EnvBaseSettings):
     BOT_TOKEN: str = "token"

@@ -82,7 +82,6 @@ dialog = Dialog(
             LastPage(scroll='l_portfolio_assets', text=Format("{target_page1} >>")),
             when="pagination"
         ),
-        Const('У вас нет активов', when='is_empty'),
         Button(Const("Перейти к активам"), id="to_portfolio_assets", on_click=on_portfolio_assets_click, when=~F.is_empty),
         Button(Const("Добавить транзакцию"), id="add_transactions", on_click=on_transactions_click),
         Cancel(Const('Закрыть')),
