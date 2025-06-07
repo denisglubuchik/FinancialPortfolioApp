@@ -1,11 +1,16 @@
-from faststream.rabbit import RabbitRouter, RabbitExchange, ExchangeType
+import logging
+from faststream.rabbit import RabbitExchange, ExchangeType, RabbitRouter
 
+from back.config import RabbitMQSettings
 from back.notification_service.db.dao import UsersDAO, NotificationsDAO
 from back.notification_service.utils import send_email
+
+logger = logging.getLogger(__name__)
 
 rabbit_router = RabbitRouter()
 
 user_exchange = RabbitExchange("user_exchange", type=ExchangeType.DIRECT)
+
 
 
 @rabbit_router.subscriber("notification_user_created", user_exchange)
@@ -44,3 +49,48 @@ async def handle_email_verification(message):
         message=body,
         notification_type=notification_type
     )
+
+
+@rabbit_router.subscriber("price_change_alert")
+async def handle_price_change_alert(message):
+    """Обработка уведомлений об изменении цен"""
+    try:
+        user_id = message["user_id"]
+        asset_name = message["asset_name"]
+        asset_symbol = message["asset_symbol"] 
+        change_percent = message["change_percent"]
+        current_price = message["current_price"]
+        direction = message["direction"]
+        sign = message["sign"]
+        
+        # Проверяем существует ли пользователь
+        user = await UsersDAO.find_one_or_none(id=user_id)
+        if not user:
+            logger.warning(f"User {user_id} not found in notification service. Creating user record.")
+            await UsersDAO.insert(id=user_id, email="")
+            
+        # Форматируем уведомление
+        title = f"{direction} Изменение цены {asset_name}"
+        
+        message_text = (
+            f"🚨 Значительное изменение цены!\n\n"
+            f"**{asset_name} ({asset_symbol})** в вашем портфолио:\n"
+            f"{direction} {sign}{change_percent}%\n"
+            f"💰 Текущая цена: ${current_price:,.2f}"
+        )
+        
+        # Создаем уведомление
+        await NotificationsDAO.insert(
+            user_id=user_id,
+            title=title,
+            message=message_text,
+            notification_type="price_alert"
+        )
+        
+        logger.info(f"Price alert notification created for user {user_id}, asset {asset_name} ({change_percent:+.1f}%)")
+        
+    except Exception as e:
+        logger.error(f"Error handling price change alert: {e}")
+
+
+

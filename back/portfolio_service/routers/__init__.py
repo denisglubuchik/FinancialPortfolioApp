@@ -3,6 +3,7 @@ from back.portfolio_service.routers.portfolio import router as portfolio_router
 from back.portfolio_service.routers.assets import router as assets_router
 from back.portfolio_service.routers.transactions import router as transactions_router
 from back.portfolio_service.routers.portfolio_assets import router as portfolio_assets_router
+from back.portfolio_service.routers.price_monitoring import price_monitoring_router
 
 
 all_routers = [
@@ -10,5 +11,6 @@ all_routers = [
     portfolio_router,
     assets_router,
     transactions_router,
-    portfolio_assets_router
+    portfolio_assets_router,
+    price_monitoring_router,
 ]
