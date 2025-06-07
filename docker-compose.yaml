@@ -1,13 +1,19 @@
 services:
-  api_gateway:
-    container_name: api_gateway
-    build:
-      context: .
-      dockerfile: docker/api_gateway/Dockerfile
+  # Infrastructure first
+  redis:
+    container_name: redis
+    image: redis:latest
     ports:
-      - "7777:7777"
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   rabbitmq:
     container_name: rabbitmq
@@ -16,15 +22,13 @@ services:
       - "5672:5672"
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redis:
-    container_name: redis
-    image: redis:latest
-    ports:
-      - "6380:6379"
-    networks:
-      - app_network
-
+  # Databases
   portfolio_db:
     container_name: portfolio_postgres
     image: postgres:latest
@@ -34,26 +38,15 @@ services:
       POSTGRES_PASSWORD: "sqlpass"
     ports:
       - "5440:5432"
+    volumes:
+      - portfolio_db_data:/var/lib/postgresql/data
     networks:
       - app_network
-
-  portfolio_app:
-    container_name: portfolio_app
-    build:
-      context: .
-      dockerfile: docker/portfolio_service/Dockerfile
-    env_file:
-      - .env-docker
-    command: ["back/portfolio_service/app.sh"]
-#    command: sh -c "cd /back/portfolio_service && alembic upgrade head && cd ../../ && gunicorn back.portfolio_service.portfolio_main:portfolio_app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
-    ports:
-      - "8000:8000"
-    depends_on:
-      - portfolio_db
-      - rabbitmq
-      - api_gateway
-    networks:
-      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqluser -d portfolio_app"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   user_db:
     container_name: user_postgres
@@ -64,6 +57,51 @@ services:
       POSTGRES_PASSWORD: "sqlpass"
     ports:
       - "5441:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqluser -d user_app"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  notification_db:
+    container_name: notification_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "notification_app"
+      POSTGRES_USER: "sqluser"
+      POSTGRES_PASSWORD: "sqlpass"
+    ports:
+      - "5442:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqluser -d notification_app"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Backend Services
+  portfolio_app:
+    container_name: portfolio_app
+    build:
+      context: .
+      dockerfile: docker/portfolio_service/Dockerfile
+    env_file:
+      - .env-docker
+    command: ["back/portfolio_service/app.sh"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      portfolio_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -75,25 +113,13 @@ services:
     env_file:
       - .env-docker
     command: [ "back/user_service/app.sh" ]
-    #    command: sh -c "cd /back/user_service && alembic upgrade head && cd ../../ && gunicorn back.user_service.user_main:user_app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001"
     ports:
       - "8001:8001"
     depends_on:
-      - user_db
-      - rabbitmq
-      - api_gateway
-    networks:
-      - app_network
-
-  notification_db:
-    container_name: notification_postgres
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: "notification_app"
-      POSTGRES_USER: "sqluser"
-      POSTGRES_PASSWORD: "sqlpass"
-    ports:
-      - "5442:5432"
+      user_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -105,12 +131,13 @@ services:
     env_file:
       - .env-docker
     command: [ "back/notification_service/app.sh" ]
-    #    command: sh -c "cd /back/notification_service && alembic upgrade head && cd ../../ && faststream run back.notification_service.notification_main:notification_app --workers 4"
     ports:
       - "8002:8002"
     depends_on:
-      - notification_db
-      - rabbitmq
+      notification_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -124,10 +151,27 @@ services:
     ports:
       - "8003:8003"
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - app_network
 
+  # API Gateway - запускается ПОСЛЕ backend сервисов
+  api_gateway:
+    container_name: api_gateway
+    build:
+      context: .
+      dockerfile: docker/api_gateway/Dockerfile
+    ports:
+      - "7777:7777"
+    depends_on:
+      - portfolio_app
+      - user_app
+      - notification_app
+    networks:
+      - app_network
+
+  # Telegram Bot - запускается последним
   bot:
     container_name: tg_bot
     build:
@@ -136,9 +180,19 @@ services:
     env_file:
       - .env-bot
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      api_gateway:
+        condition: service_started
     networks:
       - app_network
 
 networks:
   app_network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  portfolio_db_data:
+  user_db_data:
+  notification_db_data:

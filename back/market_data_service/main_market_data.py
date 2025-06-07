@@ -9,7 +9,7 @@ from back.market_data_service.redis import RedisClient
 market_data_settings = MarketDataSettings()
 redis_settings = RedisSettings()
 
-CRYPTO_ASSETS = assets = cryptos = [
+CRYPTO_ASSETS = [
     "bitcoin", "ethereum", "solana", "tether", "usd-coin", "ripple", "binancecoin",
     "the-open-network", "dogecoin", "shiba-inu", "grass", "official-trump", "optimism",
     "ethereum-classic", "berachain-bera", "cardano", "tron", "chainlink", "avalanche-2",
@@ -45,7 +45,7 @@ async def update_market_data(market_data_fetcher: MarketDataFetcher, redis_clien
 async def start_scheduler(market_fetcher: MarketDataFetcher, redis_client: RedisClient):
     scheduler = AsyncIOScheduler()
 
-    scheduler.add_job(update_market_data, 'interval', minutes=10, args=[market_fetcher, redis_client])
+    scheduler.add_job(update_market_data, 'interval', minutes=3, args=[market_fetcher, redis_client])
     scheduler.start()
 
     try:

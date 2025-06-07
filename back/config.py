@@ -20,8 +20,8 @@ class RedisSettings(EnvBaseSettings):
 
 
 class UserSettings(EnvBaseSettings):
-    DB_USERS_HOST: str = "localhost"
-    DB_USERS_PORT: int = 5441
+    DB_USERS_HOST: str = "user_db"
+    DB_USERS_PORT: int = 5432
     DB_USERS_NAME: str = "user_app"
     DB_USERS_USER: str = "sqluser"
     DB_USERS_PASSWORD: str = "sqlpass"
