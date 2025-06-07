@@ -40,7 +40,7 @@ class STransactionCreate(BaseModel):
     asset_id: int
     quantity: float
     transaction_type: TransactionType
-    price: int
+    price: float
     transaction_date: datetime
 
     @field_validator("transaction_date")
