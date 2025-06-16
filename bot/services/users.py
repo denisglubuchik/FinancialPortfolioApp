@@ -58,3 +58,45 @@ async def change_email(tg_id: int, new_email: str):
         except Exception as e:
             logger.error(f"{str(e)}")
             return f"Произошла ошибка: {str(e)}"
+
+
+async def request_verification_code(tg_id: int):
+    """Запрос кода верификации email"""
+    async with ServiceClient({"gateway": settings.gateway_url}) as client:
+        try:
+            response = await client.get("gateway", f"/tg/users/{tg_id}/verification_code")
+            return "Код верификации отправлен на ваш email"
+        except httpx.HTTPStatusError as e:
+            error_detail = e.response.json().get('detail', 'Неизвестная ошибка')
+            logger.error(f"{e.response.status_code} {error_detail}")
+            if e.response.status_code == 404:
+                return "Пользователь не найден"
+            return f"Ошибка: {error_detail}"
+        except httpx.HTTPError as e:
+            logger.error(f"{str(e)}")
+            return f"Произошла ошибка: {str(e)}"
+        except Exception as e:
+            logger.error(f"{str(e)}")
+            return f"Произошла ошибка: {str(e)}"
+
+
+async def verify_email_code(tg_id: int, code: str):
+    """Верификация email по коду"""
+    async with ServiceClient({"gateway": settings.gateway_url}) as client:
+        try:
+            await client.post("gateway", f"/tg/users/{tg_id}/verification_code", params={"code": code})
+            return "Email успешно верифицирован!"
+        except httpx.HTTPStatusError as e:
+            error_detail = e.response.json().get('detail', 'Неизвестная ошибка')
+            logger.error(f"{e.response.status_code} {error_detail}")
+            if e.response.status_code == 404:
+                return "Пользователь не найден или код не найден"
+            elif e.response.status_code == 400:
+                return "Неверный код верификации"
+            return f"Ошибка: {error_detail}"
+        except httpx.HTTPError as e:
+            logger.error(f"{str(e)}")
+            return f"Произошла ошибка: {str(e)}"
+        except Exception as e:
+            logger.error(f"{str(e)}")
+            return f"Произошла ошибка: {str(e)}"

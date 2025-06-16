@@ -3,8 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from datetime import datetime
 
-from back.notification_service.db.dao import NotificationsDAO, UsersDAO
-from back.notification_service.db.models import DeliveryStatus
+from back.notification_service.db.dao import NotificationsDAO
 
 
 # Pydantic schemas
@@ -119,21 +118,4 @@ async def mark_notification_skipped(notification_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update notification: {str(e)}"
         )
-
-
-@notification_router.get("/users/{user_id}/telegram")
-async def get_user_telegram_id(user_id: int):
-    """Get user's Telegram ID"""
-    try:
-        user = await UsersDAO.find_by_id(user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        return {"user_id": user_id, "telegram_id": user.telegram_id}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch user: {str(e)}"
-        ) 
+    

@@ -20,10 +20,8 @@ def get_handlers_router() -> Router:
 
 async def setup_commands_menu(bot: Bot):
     commands = [
-        # BotCommand(command='rewrite', description="Рерайт текста"),
-        # BotCommand(command='summary', description="Саммари текста"),
-        # BotCommand(command='survey', description="Пройти анкету"),
-        # BotCommand(command='help', description="Помощь"),
+        BotCommand(command='menu', description="Главное меню"),
+        BotCommand(command='help', description="Помощь"),
     ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())

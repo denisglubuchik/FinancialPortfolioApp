@@ -76,7 +76,7 @@ class NotificationsDAO(BaseDAO):
 
     @classmethod
     async def get_pending_telegram_notifications(cls, limit: int = 50):
-        """Get pending notifications for users with Telegram IDs"""
+        """Get pending notifications for users with Telegram IDs (excluding email notifications)"""
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
@@ -86,7 +86,8 @@ class NotificationsDAO(BaseDAO):
                     and_(
                         cls.model.delivery_status == DeliveryStatus.PENDING,
                         Users.telegram_id.isnot(None),
-                        cls.model.retry_count < 3 
+                        cls.model.retry_count < 3,
+                        cls.model.notification_type != "email"  # Исключаем email уведомления
                     )
                 )
                 .order_by(cls.model.created_at)

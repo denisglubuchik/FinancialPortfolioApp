@@ -74,13 +74,57 @@ async def update_user(
     return user_data
 
 
+@router.get("/users/{tg_id}/verification_code")
+async def request_verification_code(
+        tg_id: int,
+        client: ServiceClient = Depends(get_service_client)
+):
+    """Запрос кода верификации email для пользователя Telegram"""
+    user_data = await client.get(
+        service="user",
+        endpoint=f"/users/user/by_tg/{tg_id}"
+    )
+    
+    user_id = user_data.get("id")
+    if not user_id:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    return await client.get(
+        service="user",
+        endpoint="/users/verification_code",
+        params={"user_id": user_id}
+    )
+
+
+@router.post("/users/{tg_id}/verification_code")
+async def verify_email_code(
+        tg_id: int,
+        code: str,
+        client: ServiceClient = Depends(get_service_client)
+):
+    """Верификация email по коду для пользователя Telegram"""
+    user_data = await client.get(
+        service="user",
+        endpoint=f"/users/user/by_tg/{tg_id}"
+    )
+    
+    user_id = user_data.get("id")
+    if not user_id:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    return await client.post(
+        service="user",
+        endpoint="/users/verification_code",
+        json_data={"user_id": user_id, "code": code}
+    )
+
+
 @router.get("/portfolio/{tg_id}")
 async def get_portfolio_by_tg(
         tg_id: int,
         client: ServiceClient = Depends(get_service_client)
 ):
     """Получение портфеля пользователя по Telegram ID"""
-    # Получаем user_id по tg_id
     user_data = await client.get(
         service="user",
         endpoint=f"/users/user/by_tg/{tg_id}"
@@ -90,7 +134,6 @@ async def get_portfolio_by_tg(
     if not user_id:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-    # Запрашиваем портфель по user_id
     return await client.get(
         service="portfolio",
         endpoint=f"/portfolio/by_user_id/{user_id}",

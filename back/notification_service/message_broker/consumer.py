@@ -17,38 +17,64 @@ user_exchange = RabbitExchange("user_exchange", type=ExchangeType.DIRECT)
 async def handle_new_user(message):
     user_id = message["user_id"]
     email = message["email"]
-    await UsersDAO.insert(id=user_id, email=email)
+    telegram_id = message["telegram_id"]
+    logger.info(f"Creating new user in notification service: user_id={user_id}, email={email}, telegram_id={telegram_id}")
+    await UsersDAO.insert(id=user_id, email=email, telegram_id=telegram_id)
 
 
 @rabbit_router.subscriber("notification_user_updated", user_exchange)
 async def handle_update_user(message):
     user_id = message["user_id"]
     email = message["email"]
+    logger.info(f"Updating user in notification service: user_id={user_id}, email={email}")
     await UsersDAO.update(user_id, email=email)
 
 
 @rabbit_router.subscriber("notification_user_deleted", user_exchange)
 async def handle_delete_user(message):
     user_id = message["user_id"]
+    logger.info(f"Deleting user in notification service: user_id={user_id}")
     await UsersDAO.delete(user_id)
 
 
 @rabbit_router.subscriber("email")
 async def handle_email_verification(message):
-    user_id = message["user_id"]
-    subject = message["subject"]
-    body = message["message"]
-    notification_type = "email"
+    logger.info(f"📧 Received email message: {message}")
+    
+    try:
+        user_id = message["user_id"]
+        subject = message["subject"]
+        body = message["message"]
+        notification_type = "email"
 
-    email = (await UsersDAO.find_one_or_none(id=user_id)).email
+        logger.info(f"Processing email for user_id: {user_id}")
 
-    await send_email(email, subject, body)
-    await NotificationsDAO.insert(
-        user_id=user_id,
-        title=subject,
-        message=body,
-        notification_type=notification_type
-    )
+        user = await UsersDAO.find_one_or_none(id=user_id)
+        if not user:
+            logger.error(f"❌ User {user_id} not found in notification service")
+            return
+            
+        email = user.email
+        if not email:
+            logger.error(f"❌ No email found for user {user_id}")
+            return
+            
+        logger.info(f"📧 Sending email to: {email}")
+        logger.info(f"📧 Subject: {subject}")
+
+        await send_email(email, subject, body)
+        logger.info(f"✅ Email sent successfully to {email}")
+        
+        await NotificationsDAO.insert(
+            user_id=user_id,
+            title=subject,
+            message=body,
+            notification_type=notification_type
+        )
+        logger.info(f"✅ Notification record created for user {user_id}")
+        
+    except Exception as e:
+        logger.error(f"❌ Error in handle_email_verification: {e}", exc_info=True)
 
 
 @rabbit_router.subscriber("price_change_alert")

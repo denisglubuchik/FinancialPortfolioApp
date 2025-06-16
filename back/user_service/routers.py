@@ -69,7 +69,7 @@ async def user_register(
     new_user = new_user.model_dump()
     new_user["hashed_password"] = auth_utils.hash_password(new_user["hashed_password"])
     user: Users = await UsersDAO.insert(**new_user)
-    await rabbit_producer.new_user(user.id, user.username, user.email)
+    await rabbit_producer.new_user(user.id, user.username, user.email, None)
     return user
 
 
@@ -82,7 +82,7 @@ async def telegram_login(
     if user:
         raise UserAlreadyExistsException()
     user: Users = await UsersDAO.insert(tg_id=tg_id, username=username, email="", hashed_password="")
-    await rabbit_producer.new_user(user.id, user.username, user.email)
+    await rabbit_producer.new_user(user.id, user.username, user.email, tg_id)
     return user
 
 
@@ -138,26 +138,42 @@ def generate_verification_code() -> str:
 
 # TODO добавить проверку на то что пользователь верифицирован
 @router.get("/verification_code")
-async def request_verification_code(user_id: int):
+async def request_verification_code(user_id: int):  
+    user = await UsersDAO.find_one_or_none(id=user_id)
+    if not user:
+        raise UserNotFoundException()
+    
+    if not user.email:
+        raise ValueError("User has no email address")
+    
     code = generate_verification_code()
+    
     try:
         if current_token := await VerificationTokensDAO.find_one_or_none(user_id=user_id, is_used=False):
             await VerificationTokensDAO.delete(current_token.id)
+            
         await VerificationTokensDAO.insert(user_id=user_id, verification_token=code,
                                            is_used=False, expires_at=(datetime.utcnow() + timedelta(minutes=10)))
+        
     except Exception as e:
         raise e
+    
     await rabbit_producer.email_verification(user_id, code)
+    
     return {"message": "verification code sent"}
 
 
 @router.post("/verification_code")
 async def verify_email(user_id: int = Body(), code: str = Body()):
+    
     token = await VerificationTokensDAO.find_one_or_none(user_id=user_id, is_used=False)
     if not token:
         raise VerificationTokenNotFoundException()
+    
     if token.verification_token != code:
         raise InvalidVerificationTokenException()
+        
     await VerificationTokensDAO.update(token.id, is_used=True)
     await UsersDAO.update(user_id, is_verified=True)
+    
     return {"message": "email verified"}
