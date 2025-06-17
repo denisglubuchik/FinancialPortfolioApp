@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Portfolio Management System</title>
 </head>
 <body>
 
@@ -90,7 +89,7 @@ docker compose up</code></pre>
 
 <li><strong>Verify services are running:</strong></li>
 <pre><code># Check service health
-docker compose ps
+docker compose ps</code></pre>
 </ol>
 
 <h3>Service Ports</h3>
