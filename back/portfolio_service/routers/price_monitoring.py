@@ -14,7 +14,6 @@ price_monitoring_router = APIRouter(
 async def get_monitoring_status() -> Dict[str, Any]:
     """Получить статус мониторинга цен"""
     try:
-        # Импортируем здесь чтобы избежать циклических импортов
         from back.portfolio_service.portfolio_main import price_scheduler
         
         if price_scheduler is None:

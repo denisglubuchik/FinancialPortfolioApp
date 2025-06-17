@@ -63,5 +63,4 @@ class NotificationPollingTask:
         return self.task is not None and not self.task.done()
 
 
-# Global instance
 notification_polling = NotificationPollingTask() 

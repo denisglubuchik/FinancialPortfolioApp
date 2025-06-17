@@ -8,8 +8,10 @@ RUN pip install -r back/requirements.txt
 
 COPY back/market_data_service back/market_data_service
 COPY back/config.py back/
+COPY back/logging.py back/
 
-ENV PYTHONPATH=/back:$PYTHONPATH
+RUN chmod a+x /back/market_data_service/app.sh
 
-# Запуск сервиса
-CMD ["python", "/back/market_data_service/main_market_data.py"]
+ENV PYTHONPATH=/:$PYTHONPATH
+
+CMD ["back/market_data_service/app.sh"]

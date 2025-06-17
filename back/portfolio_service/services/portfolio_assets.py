@@ -8,7 +8,6 @@ class PortfolioAssetsService:
             return asset
 
     async def get_all_portfolio_assets(self, uow: IUnitOfWork, portfolio_id: int):
-        # TODO добавить получение текущих курсов из редиса
         async with uow:
             portfolio_assets = await uow.portfolio_assets.get_all_portfolio_assets(portfolio_id)
 

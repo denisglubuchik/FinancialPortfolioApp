@@ -39,7 +39,7 @@ async def handle_delete_user(message):
 
 @rabbit_router.subscriber("email")
 async def handle_email_verification(message):
-    logger.info(f"📧 Received email message: {message}")
+    logger.info(f"Received email message: {message} in RabbitMQ")
     
     try:
         user_id = message["user_id"]
@@ -51,19 +51,19 @@ async def handle_email_verification(message):
 
         user = await UsersDAO.find_one_or_none(id=user_id)
         if not user:
-            logger.error(f"❌ User {user_id} not found in notification service")
+            logger.error(f"User {user_id} not found in notification service")
             return
             
         email = user.email
         if not email:
-            logger.error(f"❌ No email found for user {user_id}")
+            logger.error(f"No email found for user {user_id}")
             return
             
-        logger.info(f"📧 Sending email to: {email}")
-        logger.info(f"📧 Subject: {subject}")
+        logger.info(f"Sending email to: {email}")
+        logger.info(f"Subject: {subject}")
 
         await send_email(email, subject, body)
-        logger.info(f"✅ Email sent successfully to {email}")
+        logger.info(f"Email sent successfully to {email}")
         
         await NotificationsDAO.insert(
             user_id=user_id,
@@ -71,10 +71,10 @@ async def handle_email_verification(message):
             message=body,
             notification_type=notification_type
         )
-        logger.info(f"✅ Notification record created for user {user_id}")
+        logger.info(f"Notification record created for user {user_id}")
         
     except Exception as e:
-        logger.error(f"❌ Error in handle_email_verification: {e}", exc_info=True)
+        logger.error(f"Error in handle_email_verification: {e}", exc_info=True)
 
 
 @rabbit_router.subscriber("price_change_alert")
@@ -88,14 +88,12 @@ async def handle_price_change_alert(message):
         current_price = message["current_price"]
         direction = message["direction"]
         sign = message["sign"]
-        
-        # Проверяем существует ли пользователь
+
         user = await UsersDAO.find_one_or_none(id=user_id)
         if not user:
             logger.warning(f"User {user_id} not found in notification service. Creating user record.")
             await UsersDAO.insert(id=user_id, email="")
-            
-        # Форматируем уведомление
+
         title = f"{direction} Изменение цены {asset_name}"
         
         message_text = (
@@ -104,8 +102,7 @@ async def handle_price_change_alert(message):
             f"{direction} {sign}{change_percent}%\n"
             f"💰 Текущая цена: ${current_price:,.2f}"
         )
-        
-        # Создаем уведомление
+
         await NotificationsDAO.insert(
             user_id=user_id,
             title=title,

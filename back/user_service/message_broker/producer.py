@@ -15,18 +15,27 @@ class Producer:
         try:
             await self.broker.publish(message, routing_key="portfolio_user_created", exchange=self.user_exch)
             await self.broker.publish(message, routing_key="notification_user_created", exchange=self.user_exch)
+            logger.info(f"New user messages published for user_id: {user_id} in RabbitMQ")
         except Exception as e:
-            print(e)
+            logger.error(f"Failed to publish new user messages for user_id {user_id}: {e} in RabbitMQ")
 
     async def update_user(self, user_id: int, username: str = None, email: str = None):
         message = {"user_id": user_id, "username": username, "email": email}
-        await self.broker.publish(message, routing_key="portfolio_user_updated", exchange=self.user_exch)
-        await self.broker.publish(message, routing_key="notification_user_updated", exchange=self.user_exch)
+        try:
+            await self.broker.publish(message, routing_key="portfolio_user_updated", exchange=self.user_exch)
+            await self.broker.publish(message, routing_key="notification_user_updated", exchange=self.user_exch)
+            logger.info(f"User update messages published for user_id: {user_id} in RabbitMQ")
+        except Exception as e:
+            logger.error(f"Failed to publish user update messages for user_id {user_id}: {e} in RabbitMQ")
 
     async def delete_user(self, user_id: int):
         message = {"user_id": user_id}
-        await self.broker.publish(message, routing_key="portfolio_user_deleted", exchange=self.user_exch)
-        await self.broker.publish(message, routing_key="notification_user_deleted", exchange=self.user_exch)
+        try:
+            await self.broker.publish(message, routing_key="portfolio_user_deleted", exchange=self.user_exch)
+            await self.broker.publish(message, routing_key="notification_user_deleted", exchange=self.user_exch)
+            logger.info(f"User delete messages published for user_id: {user_id} in RabbitMQ")
+        except Exception as e:
+            logger.error(f"Failed to publish user delete messages for user_id {user_id}: {e} in RabbitMQ")
 
     async def email_verification(self, user_id, code):
         message = {
@@ -52,8 +61,12 @@ class Producer:
             logger.error(f"Failed to send email verification message for user_id {user_id}: {e}")
 
     async def password_changed(self, user_id):
-        await self.broker.publish({"user_id": user_id, "subject": "Password changed",
-                                   "message": "Your password has been changed"}, "email")
+        try:
+            await self.broker.publish({"user_id": user_id, "subject": "Password changed",
+                                       "message": "Your password has been changed"}, "email")
+            logger.info(f"Password changed notification sent for user_id: {user_id} in RabbitMQ")
+        except Exception as e:
+            logger.error(f"Failed to send password changed notification for user_id {user_id}: {e} in RabbitMQ")
 
 
 rabbit_producer = Producer(rabbit_broker, user_exchange)

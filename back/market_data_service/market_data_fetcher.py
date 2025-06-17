@@ -1,4 +1,7 @@
 import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MarketDataFetcher:
@@ -17,8 +20,8 @@ class MarketDataFetcher:
 
             return response.json()
         except httpx.RequestError as e:
-            print(f"Request error: {e}")
+            logger.error(f"Request error in market data fetch: {e}")
         except httpx.HTTPStatusError as e:
-            print(f"HTTP error: {e.response.status_code} - {e.response.text}")
+            logger.error(f"HTTP error in market data fetch: {e.response.status_code} - {e.response.text}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            logger.error(f"Unexpected error in market data fetch: {e}")

@@ -21,9 +21,9 @@ async def get_pending_notifications(limit: int = 50) -> List[Dict[str, Any]]:
                 endpoint="/notifications/telegram/pending",
                 params={"limit": limit}
             )
-            logger.debug(f"🔍 API response type: {type(response)}, length: {len(response) if isinstance(response, (list, dict)) else 'N/A'}")
+            logger.debug(f"API response type: {type(response)}, length: {len(response) if isinstance(response, (list, dict)) else 'N/A'}")
             result = response if isinstance(response, list) else []
-            logger.debug(f"🔍 Returning {len(result)} notifications")
+            logger.debug(f"Returning {len(result)} notifications")
             return result
         except Exception as e:
             logger.error(f"Failed to fetch pending notifications: {e}")
@@ -79,42 +79,35 @@ async def send_notification_to_user(notification: Dict[str, Any]) -> bool:
                 await mark_notification_skipped(notification["id"])
                 return False
 
-            # Format the message
             message_text = _format_notification_message(notification)
 
-            # Send message to user
             await bot.send_message(
                 chat_id=telegram_id,
                 text=message_text,
                 parse_mode="HTML"
             )
 
-            # Mark as sent
             success = await mark_notification_sent(notification["id"])
             if success:
                 logger.info(f"Successfully sent notification {notification['id']} to user {telegram_id}")
             return success
 
         except TelegramForbiddenError:
-            # User blocked the bot
             logger.info(f"User {telegram_id} blocked the bot, skipping notification {notification['id']}")
             await mark_notification_skipped(notification["id"])
             return False
 
         except TelegramBadRequest as e:
-            # Invalid chat ID or other bad request
             logger.warning(f"Bad request sending notification {notification['id']}: {e}")
             await mark_notification_skipped(notification["id"])
             return False
 
         except TelegramRetryAfter as e:
-            # Rate limited
             logger.warning(f"Rate limited, will retry notification {notification['id']} later: {e}")
             await mark_notification_failed(notification["id"])
             return False
 
         except Exception as e:
-            # Other errors - mark as failed for retry
             logger.error(f"Error sending notification {notification['id']}: {e}")
             await mark_notification_failed(notification["id"])
             return False
@@ -126,7 +119,6 @@ def _format_notification_message(notification: Dict[str, Any]) -> str:
     notification_type = notification.get("notification_type", "general")
     created_at = notification.get("created_at", "")
 
-    # Parse datetime if it's a string
     if isinstance(created_at, str):
         try:
             created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
@@ -136,7 +128,6 @@ def _format_notification_message(notification: Dict[str, Any]) -> str:
     else:
         time_str = str(created_at)
 
-        # Format based on notification type
     type_emoji = {
         "portfolio_update": "📊", 
         "price_alert": "💰",
@@ -165,17 +156,16 @@ async def process_pending_notifications() -> Dict[str, int]:
     }
 
     try:
-        # Get pending notifications
-        logger.debug("🔄 Fetching pending notifications from API...")
+        logger.debug("Fetching pending notifications from API...")
         notifications = await get_pending_notifications()
         stats["fetched"] = len(notifications)
-        logger.info(f"📥 Fetched {len(notifications)} pending notifications from API")
+        logger.info(f"Fetched {len(notifications)} pending notifications from API")
 
         if not notifications:
-            logger.info("✅ No pending notifications found")
+            logger.info("No pending notifications found")
             return stats
 
-        logger.info(f"🚀 Processing {len(notifications)} pending notifications")
+        logger.info(f"Processing {len(notifications)} pending notifications")
 
         # Process each notification
         for notification in notifications:

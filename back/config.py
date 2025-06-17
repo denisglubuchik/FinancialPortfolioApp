@@ -52,5 +52,5 @@ class NotificationSettings(EnvBaseSettings):
 
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 465
-    SMTP_USER: str = "glubuchikdenis@gmail.com"
-    SMTP_PASSWORD: str = "qwwh nuhu wglr gfyg"
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""

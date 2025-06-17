@@ -5,9 +5,6 @@ from typing import Dict, Optional, Any, Union
 import httpx
 from fastapi import HTTPException
 
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +54,6 @@ class ServiceClient:
 
         url = f"{self.services[service]}{endpoint}"
 
-        # Формируем базовые заголовки, которые можно переопределить
         default_headers = {"Accept": "application/json"}
         if headers:
             default_headers.update(headers)
@@ -79,11 +75,9 @@ class ServiceClient:
             )
             response.raise_for_status()
 
-            # Проверяем, что ответ содержит JSON
             if response.headers.get("content-type", "").startswith("application/json"):
                 return response.json()
             else:
-                # Если не JSON, возвращаем текст и заголовки
                 return {
                     "content": response.text,
                     "headers": dict(response.headers),
@@ -107,7 +101,6 @@ class ServiceClient:
             logger.exception(f"Неожиданная ошибка: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    # Удобные методы для разных типов запросов
     async def get(self, service: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         return await self.request("GET", service, endpoint, **kwargs)
 

@@ -8,6 +8,7 @@ RUN pip install -r back/requirements.txt
 
 COPY back/notification_service back/notification_service
 COPY back/config.py back/
+COPY back/logging.py back/
 
 RUN chmod a+x /back/notification_service/app.sh
 

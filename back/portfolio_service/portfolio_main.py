@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 
+from back.logging import setup_logging_base_config
 from back.portfolio_service.message_broker.rabbitmq import rabbit_broker
 from back.portfolio_service.routers import all_routers
 from back.portfolio_service.utils.uow import UnitOfWork
@@ -11,67 +12,50 @@ from back.portfolio_service.schedulers.price_scheduler import PriceMonitoringSch
 from back.portfolio_service.services.portfolio import PortfolioService
 
 
+setup_logging_base_config()
 logger = logging.getLogger(__name__)
 
-# Глобальный планировщик мониторинга цен
 price_scheduler: PriceMonitoringScheduler = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # STARTUP
     global price_scheduler
     
     try:
-        # Запуск RabbitMQ
         await rabbit_broker.start()
-        logger.info("✅ RabbitMQ broker started")
-        
-        # Подключение к Redis
+        logger.info("RabbitMQ broker started in portfolio service")
+
         await redis_client.connect()
-        logger.info("✅ Redis client connected")
-        
-        # Запуск планировщика мониторинга цен
+        logger.info("Redis client connected in portfolio service")
+
         price_scheduler = PriceMonitoringScheduler(
-            price_change_threshold=5.0,  # 5% порог изменения цены
-            check_interval_minutes=15    # Проверка каждые 15 минут
+            price_change_threshold=5.0,
+            check_interval_minutes=15
         )
         
         if await price_scheduler.start():
-            logger.info("✅ Price monitoring scheduler started successfully")
+            logger.info("Price monitoring scheduler started successfully")
         else:
-            logger.error("❌ Failed to start price monitoring scheduler")
+            logger.error("Failed to start price monitoring scheduler")
         
     except Exception as e:
-        logger.error(f"❌ Startup error: {e}")
+        logger.error(f"Startup error in portfolio service: {e}")
         raise
         
-    yield  # Приложение работает здесь
-    
-    # SHUTDOWN
-    logger.info("🔄 Portfolio service shutdown initiated...")
-    
-    # Остановка планировщика мониторинга цен
+    yield
+
+    logger.info("Portfolio service shutdown initiated")
+
     if price_scheduler:
-        if await price_scheduler.stop():
-            logger.info("✅ Price monitoring scheduler stopped successfully")
-        else:
-            logger.warning("⚠️ Price monitoring scheduler shutdown had issues")
-    
-    # Остановка RabbitMQ и Redis
+        await price_scheduler.stop()
+
     try:
         await rabbit_broker.stop()
-        logger.info("✅ RabbitMQ broker stopped")
-    except Exception as e:
-        logger.warning(f"⚠️ RabbitMQ broker shutdown error: {e}")
-    
-    try:
         await redis_client.close()
-        logger.info("✅ Redis client disconnected")
+        logger.info("Portfolio service shutdown complete")
     except Exception as e:
-        logger.warning(f"⚠️ Redis client shutdown error: {e}")
-    
-    logger.info("✅ Portfolio service shutdown complete")
+        logger.warning(f"Portfolio service shutdown error: {e}")
 
 
 portfolio_app = FastAPI(lifespan=lifespan)
@@ -97,7 +81,7 @@ async def update_portfolio_value_middleware(request: Request, call_next):
             if portfolio_id:
                 await PortfolioService().update_portfolio_value(UnitOfWork(), portfolio_id.id)
         except ValueError:
-            logger.warning(f"Некорректный user_id: {user_id}")
+            logger.warning(f"Invalid user_id: {user_id}")
 
     return response
 

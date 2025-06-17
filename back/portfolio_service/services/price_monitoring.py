@@ -30,9 +30,8 @@ class PriceMonitoringService:
     async def check_price_changes(self) -> None:
         """Проверяет изменения цен для всех активов в портфелях"""
         try:
-            logger.info("🔍 Starting price monitoring check...")
-            
-            # Получаем все уникальные активы из портфелей
+            logger.info("Starting price monitoring check...")
+
             unique_assets = await self._get_unique_portfolio_assets()
             
             if not unique_assets:
@@ -40,15 +39,14 @@ class PriceMonitoringService:
                 return
                 
             logger.info(f"Found {len(unique_assets)} unique assets to monitor")
-            
-            # Проверяем каждый актив
+
             for asset in unique_assets:
                 await self._check_asset_price_change(asset)
                 
-            logger.info("✅ Price monitoring check completed")
+            logger.info("Price monitoring check completed")
             
         except Exception as e:
-            logger.error(f"❌ Error in price monitoring: {e}")
+            logger.error(f"Error in price monitoring: {e}")
             
     async def _get_unique_portfolio_assets(self) -> List[Assets]:
         """Получает все уникальные активы из портфелей пользователей"""
@@ -57,7 +55,7 @@ class PriceMonitoringService:
             query = (
                 select(Assets)
                 .join(PortfolioAssets, Assets.id == PortfolioAssets.asset_id)
-                .filter(PortfolioAssets.quantity > 0)  # Только активы с положительным количеством
+                .filter(PortfolioAssets.quantity > 0)
                 .distinct()
             )
             result = await session.execute(query)
@@ -66,7 +64,6 @@ class PriceMonitoringService:
     async def _check_asset_price_change(self, asset: Assets) -> None:
         """Проверяет изменение цены конкретного актива"""
         try:
-            # Получаем данные о цене из Redis (market_data service хранит по name: bitcoin, ethereum, solana)
             market_data = await self._get_market_data_from_redis(asset.name)
                 
             if not market_data:
@@ -80,11 +77,8 @@ class PriceMonitoringService:
                 logger.warning(f"Invalid price data for asset {asset.name}")
                 return
                 
-            logger.debug(f"{asset.name} ({asset.symbol}): price=${current_price:.2f}, 24h change={price_change_24h:+.2f}%")
-            
-            # Проверяем превышает ли изменение порог
+
             if abs(price_change_24h) >= self.price_change_threshold:
-                # Проверяем не отправляли ли уже уведомления недавно
                 if await self._should_send_alert(asset.name):
                     await self._send_price_alerts(asset, current_price, price_change_24h)
                     await self._mark_alert_sent(asset.name)
@@ -102,7 +96,6 @@ class PriceMonitoringService:
     ) -> None:
         """Отправляет уведомления пользователям, у которых есть этот актив"""
         try:
-            # Получаем всех пользователей, у которых есть этот актив
             users_with_asset = await self._get_users_with_asset(asset.name)
             
             if not users_with_asset:
@@ -122,14 +115,13 @@ class PriceMonitoringService:
                     "direction": direction,
                     "sign": sign
                 }
-                
-                # Отправляем уведомление через RabbitMQ
+
                 await rabbit_broker.publish(
                     notification_data,
                     "price_change_alert"
                 )
                 
-            logger.info(f"📢 Sent price alerts for {asset.symbol} to {len(users_with_asset)} users "
+            logger.info(f"Sent price alerts for {asset.symbol} to {len(users_with_asset)} users "
                        f"({change_percent:+.1f}%)")
                        
         except Exception as e:
@@ -139,14 +131,12 @@ class PriceMonitoringService:
         """Получает список пользователей, у которых есть определенный актив"""
         async with async_session_maker() as session:
             repository = PortfolioAssetsRepository(session)
-            # Используем готовый метод который делает правильный JOIN
             user_ids = await repository.get_users_with_asset(asset_name)
             return user_ids
             
     async def _get_market_data_from_redis(self, asset_symbol: str) -> Optional[Dict[str, str]]:
         """Получает market data для актива из Redis (сохраненные market_data_service)"""
         try:
-            # Используем готовый метод get_asset из Redis клиента
             market_data = await redis_client.get_asset(asset_symbol)
             
             if not market_data:
@@ -162,8 +152,7 @@ class PriceMonitoringService:
         """Проверяет можно ли отправить уведомление (не отправляли ли недавно)"""
         try:
             cooldown_key = f"{self._alert_cooldown_key_prefix}{asset_name}"
-            
-            # Проверяем есть ли ключ в Redis напрямую
+
             if hasattr(redis_client, 'redis') and redis_client.redis:
                 last_sent = await redis_client.redis.get(cooldown_key)
                 return last_sent is None  # Если ключа нет - можно отправлять
@@ -179,13 +168,10 @@ class PriceMonitoringService:
         """Отмечает что уведомление было отправлено (устанавливает cooldown)"""
         try:
             cooldown_key = f"{self._alert_cooldown_key_prefix}{asset_name}"
-            # Сохраняем отметку на время cooldown (в секундах)
             cooldown_seconds = self._alert_cooldown_hours * 60 * 60
-            
-            # Используем напрямую redis клиент для setex
+
             if hasattr(redis_client, 'redis') and redis_client.redis:
                 await redis_client.redis.setex(cooldown_key, cooldown_seconds, "sent")
-                logger.debug(f"Set cooldown for {asset_name} for {self._alert_cooldown_hours} hour(s)")
             else:
                 logger.warning(f"Redis client not properly initialized for cooldown marking")
                 

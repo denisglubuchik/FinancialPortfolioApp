@@ -53,14 +53,14 @@ class PriceMonitoringScheduler:
             self.scheduler.start()
             self.is_running = True
             
-            logger.info(f"✅ Price monitoring scheduler started successfully")
-            logger.info(f"⏰ Price monitoring will run every {self.check_interval_minutes} minutes")
-            logger.info(f"📊 Price change threshold: {self.price_monitoring_service.price_change_threshold}%")
+            logger.info(f"Price monitoring scheduler started successfully")
+            logger.info(f"Price monitoring will run every {self.check_interval_minutes} minutes")
+            logger.info(f"Price change threshold: {self.price_monitoring_service.price_change_threshold}%")
             
             return True
             
         except Exception as e:
-            logger.error(f"❌ Failed to start price monitoring scheduler: {e}")
+            logger.error(f"Failed to start price monitoring scheduler: {e}")
             return False
             
     async def stop(self) -> bool:
@@ -73,29 +73,29 @@ class PriceMonitoringScheduler:
             self.scheduler.shutdown(wait=True)
             self.is_running = False
             
-            logger.info("✅ Price monitoring scheduler stopped successfully")
+            logger.info("Price monitoring scheduler stopped successfully")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Error stopping price monitoring scheduler: {e}")
+            logger.error(f"Error stopping price monitoring scheduler: {e}")
             return False
             
     def _job_error_listener(self, event):
         """Обработчик ошибок заданий"""
-        logger.error(f"❌ Price monitoring job failed: {event.exception}")
+        logger.error(f"Price monitoring job failed: {event.exception}")
         
     def _job_executed_listener(self, event):
         """Обработчик успешного выполнения заданий"""
-        logger.debug(f"✅ Price monitoring job executed successfully")
+        logger.debug(f"Price monitoring job executed successfully")
         
     async def trigger_manual_check(self) -> None:
         """Ручной запуск проверки цен"""
         try:
-            logger.info("🔧 Manual price monitoring check triggered")
+            logger.info("Manual price monitoring check triggered")
             await self.price_monitoring_service.check_price_changes()
             
         except Exception as e:
-            logger.error(f"❌ Manual price check failed: {e}")
+            logger.error(f"Manual price check failed: {e}")
             
     def get_status(self) -> dict:
         """Возвращает статус планировщика"""
